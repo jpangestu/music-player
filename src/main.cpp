@@ -118,24 +118,62 @@ int main() {
                                  "1. Create New Playlist", "2. Show all playlist", "3. Edit Playlist",
                                  "4. Delete Playlist"});
 
-    vector<string> musicLibraryMenu({" Choose one option below by typing the number/symbol (0,1,<,... )",
+    vector<string> musicLibraryMenu({"# Music Library #", " Choose one option below by typing the number/symbol (0,1,<,... )",
                                      "1. Add song to library", "2. Show all song in the library",
                                      "3. Edit song", "4. Delete song"});
 
-    // Add music from .mp3 files
-    string dir;
-    vector<string> allMp3Loc;
-    vector<Music> allMp3File;
-    cout << "Insert directory: "; getline(cin, dir);
-    allMp3Loc = findMp3(dir);
+    
 
-    for (int i = 0; i < allMp3Loc.size(); i++) {
-        FILE *f = fopen(allMp3Loc[i].c_str(), "rb");
 
+
+
+    // Interface/UI
+    string option;
+    printUI(musicLibraryMenu, 80);
+    getline(cin, option);
+    // Add Song (.mp3)
+    if (option == "1") {
+        string dir;
+        vector<string> allMp3Loc;
+        vector<Music> allMp3File;
+        cout << "Insert directory: "; getline(cin, dir);
+        allMp3Loc = findMp3(dir);
+
+        for (int i = 0; i < allMp3Loc.size(); i++) {
+            FILE *f = fopen(allMp3Loc[i].c_str(), "rb");
+
+            if (f) {
+                mp3_id3_tags tags;
+                if (mp3_id3_file_read_tags(f, &tags)) {
+                    printf("MP3: %s\n\n", allMp3Loc[i].c_str());
+
+                    printf("Title: %s\n", tags.title);
+                    printf("Artist: %s\n", tags.artist);
+                    printf("Album: %s\n", tags.album);
+                    printf("Year: %s\n", tags.year);
+                } else {
+                    fprintf(stderr, "error: %s\n", mp3_id3_failure_reason());
+                }
+
+                fclose(f);
+            } else {
+                printf("failed to open/read '%s'\n", allMp3Loc[i].c_str());
+            }
+        }
+    } else if (option == "2") {
+
+    } else if (option == "3") {
+
+    } else if (option == "4") {
+
+    } else if (option == "69") {
+        string dir;
+        getline(cin, dir);
+        FILE *f = fopen(dir.c_str(), "rb");
         if (f) {
             mp3_id3_tags tags;
             if (mp3_id3_file_read_tags(f, &tags)) {
-                printf("MP3: %s\n\n", allMp3Loc[i].c_str());
+                printf("MP3: %s\n\n", dir.c_str());
 
                 printf("Title: %s\n", tags.title);
                 printf("Artist: %s\n", tags.artist);
@@ -147,13 +185,9 @@ int main() {
 
             fclose(f);
         } else {
-            printf("failed to open/read '%s'\n", allMp3Loc[i].c_str());
+            printf("failed to open/read '%s'\n", dir.c_str());
         }
+    } else {
+
     }
-
-
-
-
-    // Interface/UI
-    printUI(playlistMenu, 80);
 }
