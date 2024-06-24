@@ -5,6 +5,9 @@
 #include <cmath> // floor()
 #include <conio.h> // getch()
 #include <windows.h>
+#include <algorithm> // sort()
+
+#pragma comment(lib, "Winmm.lib")
 
 // For reading .mp3 files tag (https://github.com/Arcxm/mp3_id3_tags)
 #define MP3_ID3_TAGS_IMPLEMENTATION
@@ -17,12 +20,183 @@ struct Music {
     string artist;
     string dir;
     Music* next;
-    Music* prev;
 
     Music(string Title, string Artist, string Directory) {
         title = Title;
         artist = Artist;
         dir = Directory;
+    }
+
+    bool compareByTitle (const Music &a, const Music &b)
+    {
+        if (a.title.compare(b.title) < 0) {
+            return a.title < b.title;
+        }
+
+        return b.title < a.title;
+    }
+};
+
+// Playlist class using linked list (queue)
+class Queue {
+private:
+    Music* front;  // Front of the playlist
+    Music* rear;   // Rear of the playlist
+    Music* nowPlaying; // Currently playing song
+
+public:
+    Queue() : front(nullptr), rear(nullptr), nowPlaying(nullptr) {}
+
+    // Function to add a song to the playlist (enqueue)
+    void addSong(string title, string artist, string dir) {
+        Music* newNode = new Music(title, artist, dir);
+        if (rear == nullptr) {
+            front = rear = newNode;
+        }
+        else {
+            rear->next = newNode;
+            rear = newNode;
+        }
+        cout << "Added song: " << title << " (by " << artist << ")" << endl;
+    }
+
+    // Function to delete a song from the playlist by index
+    void deleteSong(int index) {
+        if (front == nullptr) {
+            cout << "Playlist is empty. No songs to delete.\n";
+            return;
+        }
+
+        Music* current = front;
+        Music* previous = nullptr;
+        int currentIndex = 0;
+
+        // Traverse the list to find the song at the given index
+        while (current != nullptr && currentIndex != index) {
+            previous = current;
+            current = current->next;
+            currentIndex++;
+        }
+
+        if (current == nullptr) {
+            cout << "Invalid index. No song found at index " << index << ".\n";
+            return;
+        }
+
+        // Remove the song from the playlist
+        if (current == front) {
+            front = front->next;
+        }
+        else {
+            previous->next = current->next;
+            if (current == rear) {
+                rear = previous;
+            }
+        }
+
+        cout << "Deleted song at index " << index << ": " << current->title << " (by " << current->artist << ")\n";
+        delete current;
+    }
+
+    // Function to play the next song in the playlist (dequeue)
+    void playNextSong() {
+        if (front == nullptr) {
+            cout << "Playlist is empty. Add songs first.\n";
+            return;
+        }
+        if (nowPlaying != nullptr) {
+            delete nowPlaying;
+            nowPlaying = nullptr;
+        }
+        nowPlaying = front;
+        front = front->next;
+        cout << "Now playing: " << nowPlaying->title << " (by " << nowPlaying->artist << ")\n";
+    }
+
+    // Function to shuffle the playlist
+    //Code fix
+// Function to shuffle the playlist
+    void shufflePlaylist() {
+        // Implementing Fisher-Yates shuffle algorithm
+        if (front == nullptr) {
+            cout << "Playlist is empty. Add songs first.\n";
+            return;
+        }
+
+        // Convert linked list to array for easier shuffling
+        Music* current = front;
+        int length = 0;
+        while (current != nullptr) {
+            length++;
+            current = current->next;
+        }
+
+        Music** queueArray = new Music * [length];
+        current = front;
+        int i = 0;
+        while (current != nullptr) {
+            queueArray[i++] = current;
+            current = current->next;
+        }
+
+        // Shuffle the array
+        srand(time(0));  // Seed for randomness
+        for (int i = length - 1; i > 0; i--) {
+            int j = rand() % (i + 1);
+            swap(queueArray[i], queueArray[j]);
+        }
+
+        // Reconstruct the playlist with shuffled order
+        front = queueArray[0];
+        rear = queueArray[length - 1];
+        rear->next = nullptr;
+        for (int i = 0; i < length - 1; i++) {
+            queueArray[i]->next = queueArray[i + 1];
+        }
+
+        delete[] queueArray;
+
+        cout << "Playlist shuffled.\n";
+    }
+
+
+    // Function to display the current playlist
+    void displayPlaylist() {
+        if (front == nullptr) {
+            cout << "Playlist is empty.\n";
+            return;
+        }
+        cout << "Current Playlist:\n";
+        Music* current = front;
+        int index = 0;
+        while (current != nullptr) {
+            cout << index << ". " << current->title << " (by " << current->artist << ")\n";
+            current = current->next;
+            index++;
+        }
+    }
+
+    // Function to display the currently playing song
+    void displayNowPlaying() {
+        if (nowPlaying == nullptr) {
+            cout << "No song is currently playing...";
+        }
+        else {
+            cout << "Now playing: " << nowPlaying->title << " (by " << nowPlaying->artist << ")";
+        }
+    }
+
+    // Destructor to free memory
+    ~Queue() {
+        Music* current = front;
+        while (current != nullptr) {
+            Music* temp = current;
+            current = current->next;
+            delete temp;
+        }
+        if (nowPlaying != nullptr) {
+            delete nowPlaying;
+        }
     }
 };
 
@@ -342,7 +516,7 @@ int main() {
                                  "4. Delete Playlist"};
 
     vector<string> musicLibraryMenu{"Music Library", " Choose one option below by typing the number/symbol (0,1,<,... )",
-                                     "1. Add song to library", "2. Show all song in the library", "3. Search Song" "4. Delete song from the library"};
+                                     "1. Add song to library", "2. Show all song in the library", "3. Search Song", "4. Delete song from the library"};
 
     vector<string> allMusicLoc;
     vector<Music*> allMusic;
@@ -374,7 +548,7 @@ int main() {
                 if (mp3_id3_file_read_tags(f, &tags)) {
                     title = tags.title;
                     artist = tags.artist;
-                    cout << title << " by " << artist << " has been added to library" << endl;
+                    cout << title << " by " << artist << " has added to the library" << endl;
                     allMusic.emplace_back(new Music{title, artist, allMusicLoc[i]});
                 } else {
                     fprintf(stderr, "error: %s\n", mp3_id3_failure_reason());
@@ -387,6 +561,7 @@ int main() {
         }
 
         musicInQue = allMusic[0]->artist + " - " + allMusic[0]->title;
+        musicInQue = "Avenged Sevenfold - Fiction";
         cout << endl;
         printConfirm();
         goto libraryMenu;
@@ -394,7 +569,7 @@ int main() {
         clearScreen();
 
         for (int i = 0; i < allMusic.size(); i++) {
-            cout << i + 1  << ". "<< allMusic[i]->artist << " - " << allMusic[i]->title << endl;
+            cout << i + 1  << ". "<< allMusic[i]->title << " - " << allMusic[i]->artist << endl;
         }
 
         printConfirm();
@@ -409,8 +584,13 @@ int main() {
         goto playlistMenu;
     } else if (option == "0") {
         exit(EXIT_SUCCESS);
-    } else if (option == "debug") {
+    } else if (option == "69") {
+        // string tmp = "open " + allMusic[1]->dir + " type mpegvideo alias mp3";
+        // std::wstring widestr = std::wstring(tmp.begin(), tmp.end());
+        // const wchar_t* widecstr = widestr.c_str();
+        // mciSendString(widecstr, NULL, 0, NULL);
 
+        sort(allMusic.begin(), allMusic.end());
     } else {
         goto libraryMenu;
     }
@@ -436,7 +616,57 @@ int main() {
     } else if (option == "0") {
         exit(EXIT_SUCCESS);
     } else if (option == "69") {
-        
+        Queue myQueue;
+        int choice;
+        string title, artist;
+        int indexToDelete;
+
+        do {
+            cout << "\n--- Music Playlist Menu ---\n";
+            cout << "================================\n";
+            cout << "|"; myQueue.displayNowPlaying();cout << "| ";
+            cout << " \n================================\n";
+            cout << "1. Add a song\n";
+            cout << "2. Delete a song\n";
+            cout << "3. Play next song\n";
+            cout << "4. Shuffle playlist\n";
+            cout << "5. Display playlist\n";
+            cout << "0. Exit\n";
+            cout << "Enter your choice: ";
+            cin >> choice;
+
+            switch (choice) {
+            case 1:
+                cout << "Enter song name: ";
+                cin.ignore(); // Ignore newline character left by previous cin
+                cin >> title;
+                cout << "Enter singer: ";
+                cin >> title;
+                myQueue.addSong(title, artist, "");
+                break;
+            case 2:
+                cout << "Enter index of song to delete: ";
+                cin >> indexToDelete;
+                myQueue.deleteSong(indexToDelete);
+                break;
+            case 3:
+                myQueue.playNextSong();
+                break;
+            case 4:
+                myQueue.shufflePlaylist();
+                break;
+            case 5:
+                myQueue.displayPlaylist();
+                break;
+            case 0:
+                cout << "Exiting...\n";
+                break;
+            default:
+                cout << "Invalid choice. Please enter a valid option.\n";
+            }
+        } while (choice != 0);
+
+        return 0;
     } else {
         goto playlistMenu;
     }
