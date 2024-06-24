@@ -2,6 +2,9 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <cmath> // floor()
+#include <conio.h> // getch()
+#include <windows.h>
 
 // For reading .mp3 files tag (https://github.com/Arcxm/mp3_id3_tags)
 #define MP3_ID3_TAGS_IMPLEMENTATION
@@ -12,8 +15,15 @@ using namespace std;
 struct Music {
     string title;
     string artist;
-    string album;
-    int year;
+    string dir;
+    Music* next;
+    Music* prev;
+
+    Music(string Title, string Artist, string Directory) {
+        title = Title;
+        artist = Artist;
+        dir = Directory;
+    }
 };
 
 enum MenuType {
@@ -25,7 +35,7 @@ enum PageAlignment {
 };
 
 // Maximum number of character for the interface (UI)
-int maxLength = 85;
+int maxLength = 86;
 
 // Find all .mp3 files in a directory (and all of it's subdirectory) and store it in vector
 vector<string> findMp3(string directory) {
@@ -50,20 +60,20 @@ vector<string> findMp3(string directory) {
 }
 
 // Helper for the main printUI function
-void printUI(string message, int maxLength, PageAlignment pageAlignment) {
+string printUI(string message, int maxLength, PageAlignment pageAlignment) {
     if (pageAlignment == Left) {
         message = "| " + message;
         size_t length = maxLength - message.length();
         for (size_t i = 1; i < length; i++) {
             message += " ";
             if (i == length - 1) {
-                message += "|\n";
+                message += "|";
             }
         }
-        cout << message;
+        return message;
     } else {
         string str;
-        size_t length = maxLength/2 - message.length()/2;
+        size_t length = floor(maxLength/2 - message.length()/2);
         for (size_t i = 1; i < length; i++) {
             if (i == 1) {
                 str += "|";
@@ -78,10 +88,10 @@ void printUI(string message, int maxLength, PageAlignment pageAlignment) {
         for (size_t i = 1; i < length; i++) {
             str += " ";
             if (i == length - 1) {
-                str += "|\n";
+                str += "|";
             }
         }
-        cout << str;
+        return str;
     }   
 }
 
@@ -94,12 +104,17 @@ void printUI(vector<string> list, int maxLength, MenuType menuType) {
         if (i == 0 || i == maxLength - 1) {
             upperStrip += "+";
             blankLine += "|";
-            lowerOption += "|";
-            lowerStrip += "+";
-            continue;
         } else {
             upperStrip += "-";
             blankLine += " ";
+        }
+
+    }
+    
+    for (int i = 0; i < maxLength; i++) {
+        if (i == 0 || i == maxLength - 1) {
+            lowerOption += "|";
+            lowerStrip += "+";
             continue;
         }
         
@@ -115,7 +130,7 @@ void printUI(vector<string> list, int maxLength, MenuType menuType) {
 
         // Print lower border option based on position (type of menu)
         if (menuType == NowPlaying) {
-            if ( i == 2) {
+            if (i == 2) {
                 lowerOption += "8. Playlist | 9. Library |";
                 i += 26;
 
@@ -128,7 +143,7 @@ void printUI(vector<string> list, int maxLength, MenuType menuType) {
                 }
             }
         } else if (menuType == Library) {
-            if ( i == 2) {
+            if (i == 2) {
                 lowerOption += "8. Now Playing | 9. Playlist |";
                 i += 30;
                 
@@ -141,7 +156,7 @@ void printUI(vector<string> list, int maxLength, MenuType menuType) {
                 }
             }
         } else {
-            if ( i == 2) {
+            if (i == 2) {
                 lowerOption += "8. Library | 9. Now Playing |";
                 i += 29;
                 
@@ -158,40 +173,149 @@ void printUI(vector<string> list, int maxLength, MenuType menuType) {
         lowerOption += " ";
         lowerStrip += "-";
     }
+
     cout << upperStrip << endl;
 
+    // Print menu (the content)
     if (menuType == NowPlaying) {
-        
+        for (int i = 0; i < list.size(); i++) {
+            cout << "|" << list[i] << "|" << endl;
+        }
     } else {
-        // Print menu (the content)
         for (int i = 0; i < list.size(); i++) {
             if ( i == 0) {
-            printUI(list[i], maxLength, Middle);
+            cout << printUI(list[i], maxLength, Middle) << endl;
             } else {
-                printUI(list[i], maxLength, Left);
+                cout << printUI(list[i], maxLength, Left) << endl;
             }
         }
+        cout << blankLine << endl;
     }
-
-    cout << blankLine << endl << lowerStrip << endl << lowerOption << endl << lowerStrip << endl;
+    cout << lowerStrip << endl << lowerOption << endl << lowerStrip << endl;
     cout << "| Input: ";
 }
 
+string printNowPlaying(string message, int maxLength, PageAlignment pageAlignment) {
+    message;
+    size_t length = maxLength - message.length();
+    if (pageAlignment == Left) {
+        size_t length = maxLength - message.length();
+        for (size_t i = 0; i < length; i++) {
+            message += " ";
+        }
+        return message;
+    } else {
+        string str;
+        size_t length = floor(maxLength/2 - message.length()/2);
+        for (size_t i = 0; i < length - 1; i++) {
+            str += " ";
+        }
+
+        str += message;
+
+        length = maxLength - str.length();
+        for (size_t i = 0; i < length; i++) {
+            str += " ";
+        }
+        return str;
+    }  
+}
 // Create Now Playing Menu list (the contents)
 vector<string> createNowPlayingList(string currentlyPlayedMusic, int maxLength, vector<string> queueList) {
+    maxLength -= 2; // For counting left & right border
     int npMaxLength = maxLength * 60/100;
     int queMaxLength = maxLength - npMaxLength;
+    for (int i = 0; i < queueList.size(); i++) {
+        queueList[i] = " " + queueList[i];
+    }
     vector<string> nowPlayingMenu;
+    string str;
 
-    for (int i = 0; i < npMaxLength; i++) {
-        
+    for (int i = 1; i <= 9; i++) {
+        str = "";
+
+        // Now Playing section only
+        for (int j = 1; j <= npMaxLength; j++) { // j starts at 1
+            if (i == 1 || i == 9) {
+                if (j == 1 || j == npMaxLength) {
+                    str += "+";
+                } else {
+                    str += "-";
+                }
+            } else if (i == 4 || i == 6) {
+                if (j == 1 || j == npMaxLength) {
+                    str += "|";
+                } else {
+                    str += " ";
+                }
+            } else if (i == 7) {
+                if (j == 1 || j == npMaxLength) {
+                    str += "|";
+                } else if (j == 4) {
+                    str += "< Prev.";
+                    j += 6;
+                } else  if (j == npMaxLength - 2 - 6) { // 2 is for counting the space
+                    str += "Next >";
+                    j += 5;
+                } else if (j == npMaxLength/2 - 5) {
+                    str += "? Play/Pause";
+                    j += 11;
+                } else {
+                    str += " ";
+                }
+            }  else if (i == 8) {
+                if (j == 1 || j == npMaxLength) {
+                    str += "|";
+                } else if (j == 4) {
+                    str += "6. Shuffle";
+                    j += 9;
+                } else  if (j == npMaxLength - 2 - 7) {
+                    str += "7. Sort";
+                    j += 6;
+                } else {
+                    str += " ";
+                }
+            }
+        }
+
+        if (i == 1) {
+            str += printNowPlaying("Queue", queMaxLength, Middle);
+        } else if (i == 2) {
+            str = printUI("Now Playing", npMaxLength, Middle);
+            str += printNowPlaying(queueList[0], queMaxLength, Left);
+        } else if (i == 3) {
+            str = printUI("-------------", npMaxLength, Middle);
+            str += printNowPlaying(queueList[1], queMaxLength, Left);
+        } else if (i == 4) {
+            for (int a = 0; a < queMaxLength; a++) {
+                str += "-";
+            }
+        } else if (i == 5) {
+            string tmp;
+            if (currentlyPlayedMusic.length() > npMaxLength) {
+                for (int k = 0; k < npMaxLength; k++) {
+                    tmp += currentlyPlayedMusic[i];
+                }
+                currentlyPlayedMusic = tmp;
+            }
+            str = printUI(currentlyPlayedMusic, npMaxLength, Middle);
+            str += printNowPlaying(queueList[2], queMaxLength, Left);
+        } else if (i == 6) {
+            for (int a = 0; a < queMaxLength; a++) {
+                str += "-";
+            }
+        } else if (i == 7) {
+            str += printNowPlaying(queueList[3], queMaxLength, Left);
+        } else if (i == 8) {
+            str += printNowPlaying(queueList[4], queMaxLength, Left);
+        } else {
+            for (int a = 0; a < queMaxLength; a++) {
+                str += " ";
+            }
+        }
+
+        nowPlayingMenu.insert(nowPlayingMenu.end(), str);
     }
-
-    for (int i = 0; i < queMaxLength; i++) {
-
-    }
-    nowPlayingMenu.insert(nowPlayingMenu.end(), "");
-
     return nowPlayingMenu;
 }
 
@@ -203,21 +327,26 @@ void clearScreen() {
     }
 }
 
+void printConfirm() {
+    cout << "Press any key to go back to the Main Menu" << endl;
+    getch();
+    clearScreen();
+}
+
 int main() {
+    vector<string> dummyQueueList {"1. A little Piece of Heaven", "2. Afterlife", "3. Fiction", "4. Lost", "5. Save Me"};
 
     // Define each menu list
-    vector<string> playlistMenu({"Playlists "," Choose one option below by typing the number/symbol (0,1,<,... )",
+    vector<string> playlistMenu{"Playlists "," Choose one option below by typing the number/symbol (0,1,<,... )",
                                  "1. Create New Playlist", "2. Show all playlist", "3. Edit Playlist",
-                                 "4. Delete Playlist"});
+                                 "4. Delete Playlist"};
 
-    vector<string> musicLibraryMenu({"Music Library", " Choose one option below by typing the number/symbol (0,1,<,... )",
-                                     "1. Add song to library", "2. Show all song in the library",
-                                     "3. Edit song", "4. Delete song"});
+    vector<string> musicLibraryMenu{"Music Library", " Choose one option below by typing the number/symbol (0,1,<,... )",
+                                     "1. Add song to library", "2. Show all song in the library", "3. Search Song" "4. Delete song from the library"};
 
-    
-
-
-
+    vector<string> allMusicLoc;
+    vector<Music*> allMusic;
+    string musicInQue = " ";
 
     // Interface/UI
     string option;
@@ -230,83 +359,58 @@ int main() {
     // Add Song (.mp3)
     if (option == "1") {
         string dir;
-        vector<string> allMp3Loc;
-        vector<Music> allMp3File;
-        cout << "Insert directory: "; getline(cin, dir);
-        allMp3Loc = findMp3(dir);
 
-        for (int i = 0; i < allMp3Loc.size(); i++) {
-            FILE *f = fopen(allMp3Loc[i].c_str(), "rb");
+        clearScreen();
+        cout << "Insert directory: "; getline(cin, dir);
+        cout << endl;
+        allMusicLoc = findMp3(dir);
+
+        for (int i = 0; i < allMusicLoc.size(); i++) {
+            FILE *f = fopen(allMusicLoc[i].c_str(), "rb");
 
             if (f) {
                 mp3_id3_tags tags;
+                string title, artist;
                 if (mp3_id3_file_read_tags(f, &tags)) {
-                    printf("MP3: %s\n\n", allMp3Loc[i].c_str());
-
-                    printf("Title: %s\n", tags.title);
-                    printf("Artist: %s\n", tags.artist);
-                    printf("Album: %s\n", tags.album);
-                    printf("Year: %s\n", tags.year);
+                    title = tags.title;
+                    artist = tags.artist;
+                    cout << title << " by " << artist << " has been added to library" << endl;
+                    allMusic.emplace_back(new Music{title, artist, allMusicLoc[i]});
                 } else {
                     fprintf(stderr, "error: %s\n", mp3_id3_failure_reason());
                 }
 
                 fclose(f);
             } else {
-                printf("failed to open/read '%s'\n", allMp3Loc[i].c_str());
+                printf("failed to open/read '%s'\n", allMusicLoc[i].c_str());
             }
         }
+
+        musicInQue = allMusic[0]->artist + " - " + allMusic[0]->title;
+        cout << endl;
+        printConfirm();
+        goto libraryMenu;
     } else if (option == "2") {
-        string dir;
-        getline(cin, dir);
-        mp3_id3_tags tags;
+        clearScreen();
 
-        char *artist = mp3_id3_read_tag(dir.c_str(), ARTIST);
-        if (artist) {
-        fprintf(stdout, "Artist: %s\n", artist);
-        free(artist);
-        artist = NULL;
-        } else {
-        fprintf(stderr, "error: %s\n", mp3_id3_failure_reason());
+        for (int i = 0; i < allMusic.size(); i++) {
+            cout << i + 1  << ". "<< allMusic[i]->artist << " - " << allMusic[i]->title << endl;
         }
 
-        if (mp3_id3_read_tags(dir.c_str(), &tags)) {
-            fprintf(stdout, "%s by %s\n", tags.title, tags.artist);
-        } else {
-            fprintf(stderr, "error: %s\n", mp3_id3_failure_reason());
-        }
-
+        printConfirm();
+        goto libraryMenu;
     } else if (option == "3") {
 
     } else if (option == "4") {
 
     } else if (option == "8") {
-
+        goto nowPlayingMenu;
     } else if (option == "9") {
         goto playlistMenu;
     } else if (option == "0") {
         exit(EXIT_SUCCESS);
-    } else if (option == "69") {
-        string dir;
-        getline(cin, dir);
-        FILE *f = fopen(dir.c_str(), "rb");
-        if (f) {
-            mp3_id3_tags tags;
-            if (mp3_id3_file_read_tags(f, &tags)) {
-                printf("MP3: %s\n\n", dir.c_str());
+    } else if (option == "debug") {
 
-                printf("Title: %s\n", tags.title);
-                printf("Artist: %s\n", tags.artist);
-                printf("Album: %s\n", tags.album);
-                printf("Year: %s\n", tags.year);
-            } else {
-                fprintf(stderr, "error: %s\n", mp3_id3_failure_reason());
-            }
-
-            fclose(f);
-        } else {
-            printf("failed to open/read '%s'\n", dir.c_str());
-        }
     } else {
         goto libraryMenu;
     }
@@ -328,12 +432,39 @@ int main() {
     } else if (option == "8") {
         goto libraryMenu;
     } else if (option == "9") {
-        
+        goto nowPlayingMenu;
     } else if (option == "0") {
         exit(EXIT_SUCCESS);
     } else if (option == "69") {
         
     } else {
         goto playlistMenu;
+    }
+
+
+    nowPlayingMenu:
+    clearScreen();
+    vector<string> nowPlayingMenu = createNowPlayingList(musicInQue, maxLength, dummyQueueList);
+    printUI(nowPlayingMenu, maxLength, NowPlaying);
+    getline(cin, option);
+
+    if (option == "1") {
+
+    } else if (option == "2") {
+
+    } else if (option == "3") {
+        
+    } else if (option == "4") {
+        
+    } else if (option == "8") {
+        goto playlistMenu;
+    } else if (option == "9") {
+        goto libraryMenu;
+    } else if (option == "0") {
+        exit(EXIT_SUCCESS);
+    } else if (option == "69") {
+        
+    } else {
+        goto nowPlayingMenu;
     }
 }
