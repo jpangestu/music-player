@@ -1,1 +1,1 @@
-g++ src\main.cpp -o build\music-playlist.exe
+g++ src\main.cpp -o build\music-playlist.exe -lwinmm

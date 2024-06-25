@@ -7,13 +7,14 @@
 #include <windows.h>
 #include <algorithm> // sort()
 
-#pragma comment(lib, "Winmm.lib")
-
 // For reading .mp3 files tag (https://github.com/Arcxm/mp3_id3_tags)
 #define MP3_ID3_TAGS_IMPLEMENTATION
 #include "../lib/mp3_id3_tags/mp3_id3_tags.h"
 
 using namespace std;
+
+// Function prototype
+string convertPath(string path);
 
 struct Music {
     string title;
@@ -105,18 +106,43 @@ public:
             return;
         }
         if (nowPlaying != nullptr) {
-            delete nowPlaying;
-            nowPlaying = nullptr;
+            cout << "I am executed" << endl;
+            mciSendStringW(L"stop mp3", NULL, 0, NULL);
+            mciSendStringW(L"close mp3", NULL, 0, NULL);
+
+
+            // string path = convertPath(nowPlaying->dir);
+
+            // Convert std::string to std::wstring
+            // std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            // std::wstring pathConverted = converter.from_bytes(path);
+
+            // std::wstring finalPath = L"close \"" + pathConverted + L"\" type mpegvideo alias mp3";
+
+            // mciSendStringW(finalPath.c_str(), NULL, 0, NULL);
+            //     delete nowPlaying;
+            //     nowPlaying = nullptr;
         }
         nowPlaying = front;
         front = front->next;
+
+        string path = convertPath(nowPlaying->dir);
+        cout << nowPlaying->dir << endl;
+
+         // Convert std::string to std::wstring
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+        std::wstring pathConverted = converter.from_bytes(path);
+
+        std::wstring finalPath = L"open \"" + pathConverted + L"\" type mpegvideo alias mp3";
+
+        mciSendStringW(finalPath.c_str(), NULL, 0, NULL);
+        mciSendStringW(L"play mp3", NULL, 0, NULL);
+
         cout << "Now playing: " << nowPlaying->title << " (by " << nowPlaying->artist << ")\n";
     }
 
     // Function to shuffle the playlist
-    //Code fix
-// Function to shuffle the playlist
-    void shufflePlaylist() {
+    void shuffleQueue() {
         // Implementing Fisher-Yates shuffle algorithm
         if (front == nullptr) {
             cout << "Playlist is empty. Add songs first.\n";
@@ -155,18 +181,16 @@ public:
         }
 
         delete[] queueArray;
-
-        cout << "Playlist shuffled.\n";
     }
 
 
     // Function to display the current playlist
     void displayPlaylist() {
         if (front == nullptr) {
-            cout << "Playlist is empty.\n";
+            cout << "Queue is empty.\n";
             return;
         }
-        cout << "Current Playlist:\n";
+        cout << "Queue:\n";
         Music* current = front;
         int index = 0;
         while (current != nullptr) {
@@ -231,6 +255,20 @@ vector<string> findMp3(string directory) {
             index++; // Index = vector iterator
         }
     return allMp3;
+}
+
+// Convert single backslash in windows path to double backslash
+string convertPath(string path) {
+    string convertedPath;
+
+    for (char c : path) {
+        if (c == '\\') {
+            convertedPath += "\\\\";
+        } else {
+            convertedPath += c;
+        }
+    }
+    return convertedPath;
 }
 
 // Helper for the main printUI function
@@ -521,6 +559,7 @@ int main() {
     vector<string> allMusicLoc;
     vector<Music*> allMusic;
     string musicInQue = " ";
+    Queue myQueue;
 
     // Interface/UI
     string option;
@@ -550,6 +589,7 @@ int main() {
                     artist = tags.artist;
                     cout << title << " by " << artist << " has added to the library" << endl;
                     allMusic.emplace_back(new Music{title, artist, allMusicLoc[i]});
+                    myQueue.addSong(title, artist, allMusicLoc[i]);
                 } else {
                     fprintf(stderr, "error: %s\n", mp3_id3_failure_reason());
                 }
@@ -574,8 +614,10 @@ int main() {
 
         printConfirm();
         goto libraryMenu;
-    } else if (option == "3") {
-
+    } else if (option == "try") {
+        cout << allMusic[1]->dir << endl;
+        printConfirm();
+        goto libraryMenu;
     } else if (option == "4") {
 
     } else if (option == "8") {
@@ -585,38 +627,26 @@ int main() {
     } else if (option == "0") {
         exit(EXIT_SUCCESS);
     } else if (option == "69") {
-        // string tmp = "open " + allMusic[1]->dir + " type mpegvideo alias mp3";
-        // std::wstring widestr = std::wstring(tmp.begin(), tmp.end());
-        // const wchar_t* widecstr = widestr.c_str();
-        // mciSendString(widecstr, NULL, 0, NULL);
+        string path = convertPath(allMusic[1]->dir);
 
-        sort(allMusic.begin(), allMusic.end());
-    } else {
-        goto libraryMenu;
-    }
+         // Convert std::string to std::wstring
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+        std::wstring pathConverted = converter.from_bytes(path);
 
+        std::wstring finalPath = L"open \"" + pathConverted + L"\" type mpegvideo alias mp3";
 
-    playlistMenu:
-    clearScreen();
-    printUI(playlistMenu, maxLength, Playlist);
-    getline(cin, option);
-
-    if (option == "1") {
-
-    } else if (option == "2") {
-
-    } else if (option == "3") {
+        mciSendStringW(finalPath.c_str(), NULL, 0, NULL);
+        mciSendStringW(L"play mp3", NULL, 0, NULL);
         
-    } else if (option == "4") {
-        
-    } else if (option == "8") {
+        int option;
+        cin >> option;
+        if (option == 1) {
+            mciSendStringW(L"stop mp3", NULL, 0, NULL);
+        }
+        printConfirm();
         goto libraryMenu;
-    } else if (option == "9") {
-        goto nowPlayingMenu;
-    } else if (option == "0") {
-        exit(EXIT_SUCCESS);
-    } else if (option == "69") {
-        Queue myQueue;
+        // sort(allMusic.begin(), allMusic.end());
+    } else if (option == "queue-demo") {
         int choice;
         string title, artist;
         int indexToDelete;
@@ -653,7 +683,7 @@ int main() {
                 myQueue.playNextSong();
                 break;
             case 4:
-                myQueue.shufflePlaylist();
+                myQueue.shuffleQueue();
                 break;
             case 5:
                 myQueue.displayPlaylist();
@@ -666,7 +696,31 @@ int main() {
             }
         } while (choice != 0);
 
-        return 0;
+        goto playlistMenu;
+    } else {
+        goto libraryMenu;
+    }
+
+
+    playlistMenu:
+    clearScreen();
+    printUI(playlistMenu, maxLength, Playlist);
+    getline(cin, option);
+
+    if (option == "1") {
+
+    } else if (option == "2") {
+
+    } else if (option == "3") {
+        
+    } else if (option == "4") {
+        
+    } else if (option == "8") {
+        goto libraryMenu;
+    } else if (option == "9") {
+        goto nowPlayingMenu;
+    } else if (option == "0") {
+        exit(EXIT_SUCCESS);
     } else {
         goto playlistMenu;
     }
@@ -678,7 +732,13 @@ int main() {
     printUI(nowPlayingMenu, maxLength, NowPlaying);
     getline(cin, option);
 
-    if (option == "1") {
+    if (option == "?") {
+
+    } else if (option == "<") {
+
+    } else if (option == ">") {
+
+    } else if (option == "1") {
 
     } else if (option == "2") {
 
@@ -686,6 +746,12 @@ int main() {
         
     } else if (option == "4") {
         
+    } else if (option == "5") {
+
+    } else if (option == "6") {
+
+    } else if (option == "7") {
+
     } else if (option == "8") {
         goto playlistMenu;
     } else if (option == "9") {
