@@ -1,14 +1,3 @@
-#ifndef MUSIC_QUEUE_H_
-#define MUSIC_QUEUE_H_
-
-#include <iostream>
-#include <string>
-#include <windows.h>
-#include <algorithm>
-#include <filesystem>
-#include <thread>
-
-#include "music_ui.hpp"
 #include "queue.hpp"
 
 Music::Music(std::string Title, std::string Artist, std::string Path) {
@@ -24,6 +13,7 @@ MusicQueue::MusicQueue() {
         queueCurrent = nullptr;
 }
 
+// Add new Music (struct) node
 void MusicQueue::addMusic(std::string title, std::string artist, std::string path) {
     Music* newMusic = new Music(title, artist, path);
     if (queueRear == nullptr) {
@@ -36,6 +26,7 @@ void MusicQueue::addMusic(std::string title, std::string artist, std::string pat
     }
 }
 
+// Play or paused music based on the playback status
 void MusicQueue::playOrPausedCurrentMusic() {
     if (queueFront == nullptr) {
         return;
@@ -53,35 +44,35 @@ void MusicQueue::playOrPausedCurrentMusic() {
             queueCurrent->playStatus = playing;
 
             // Check when the music has finished playing
-            std::thread checkMusicThread([this]() {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Optional delay
-                while (true) {
-                    wchar_t  status[128] = {};
-                    if (mciSendStringW(L"status mp3 mode", status, sizeof(status), NULL) != 0) {
-                        std::cerr << "Failed to get status: " << GetLastError() << std::endl;
-                    }
+            // std::thread checkMusicThread([this]() {
+            //     std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Optional delay
+            //     while (true) {
+            //         wchar_t  status[128] = {};
+            //         if (mciSendStringW(L"status mp3 mode", status, sizeof(status), NULL) != 0) {
+            //             std::cerr << "Failed to get status: " << GetLastError() << std::endl;
+            //         }
                     
-                    // Output raw status
-                    std::wcout << L"Status: " << status << std::endl;
+            //         // Output raw status
+            //         std::wcout << L"Status: " << status << std::endl;
 
-                    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-                    std::string utf8Str = converter.to_bytes(status);
-                    if (strcmp(utf8Str.c_str(), "stopped") == 0) {
-                        // Music has finished playing
-                        queueCurrent->playStatus = notPlaying;
-                        mciSendStringW(L"close mp3", NULL, 0, NULL);
-                        if (queueCurrent->next != nullptr) {
-                            queueCurrent = queueCurrent->next;
-                            playOrPausedCurrentMusic(); // Play the next music
-                        } else {
-                            std::cout << "End of the queue." << std::endl;
-                        }
-                        break;
-                    }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // Check every second
-                }
-            });
-            checkMusicThread.detach(); // Detach thread to run asynchronously
+            //         std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+            //         std::string utf8Str = converter.to_bytes(status);
+            //         if (strcmp(utf8Str.c_str(), "stopped") == 0) {
+            //             // Music has finished playing
+            //             queueCurrent->playStatus = notPlaying;
+            //             mciSendStringW(L"close mp3", NULL, 0, NULL);
+            //             if (queueCurrent->next != nullptr) {
+            //                 queueCurrent = queueCurrent->next;
+            //                 playOrPausedCurrentMusic(); // Play the next music
+            //             } else {
+            //                 std::cout << "End of the queue." << std::endl;
+            //             }
+            //             break;
+            //         }
+            //         std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // Check every second
+            //     }
+            // });
+            // checkMusicThread.detach(); // Detach thread to run asynchronously
 
         } else if(queueCurrent->playStatus == paused) {
             mciSendStringW(L"resume mp3", NULL, 0, NULL);
@@ -98,6 +89,36 @@ std::string MusicQueue::getCurrentMusic() {
     return queueCurrent->artist + " - " + queueCurrent->title;
 }
 
+// Play next music in queue
+void MusicQueue::playNextMusic() {
+    if (queueFront == nullptr) {
+        return;
+    } else {
+        mciSendStringW(L"close mp3", NULL, 0, NULL);
+        queueCurrent->playStatus = notPlaying;
+        queueCurrent = queueCurrent->next;
+        playOrPausedCurrentMusic();
+    }
+}
+
+// Play previous music in queue
+void MusicQueue::playPrevMusic() {
+    if (queueFront == nullptr) {
+        return;
+    } else {
+        mciSendStringW(L"close mp3", NULL, 0, NULL);
+        queueCurrent->playStatus = notPlaying;
+        queueCurrent = queueCurrent->prev;
+        playOrPausedCurrentMusic();
+    }
+}
+
+// Set the doubly linked list of struct Music circular to mimic Repeat All feature
+void MusicQueue::setQueueToCircular() {
+    queueFront->prev = queueRear;
+    queueRear->next = queueFront;
+}
+
 
 // Convert single backslash in windows path to double backslash
 std::string convertPath(std::string path) {
@@ -105,7 +126,7 @@ std::string convertPath(std::string path) {
 
     for (char c : path) {
         if (c == '\\') {
-            convertedPath += "\\\\";
+            convertedPath += "/";
         } else {
             convertedPath += c;
         }
@@ -113,4 +134,6 @@ std::string convertPath(std::string path) {
     return convertedPath;
 }
 
-#endif // From ifndef
+bool compareMusicByTitle(const Music* a, const Music* b) {
+    return a->title < b->title;
+}

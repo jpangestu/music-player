@@ -1,3 +1,13 @@
+#ifndef MUSIC_QUEUE_H_
+#define MUSIC_QUEUE_H_
+
+#include <iostream>
+#include <string>
+#include <windows.h>
+#include <algorithm>
+#include <filesystem>
+#include <thread>
+
 enum PlayStatus {
     notPlaying,
     playing,
@@ -27,6 +37,13 @@ class MusicQueue
         void addMusic(std::string title, std::string artist, std::string dir);
         void playOrPausedCurrentMusic();
         std::string getCurrentMusic();
+        void playNextMusic();
+        void playPrevMusic();
+        void setQueueToCircular();
 };
 
 std::string convertPath(std::string path);
+bool compareMusicByTitle(const Music* a, const Music* b);
+
+
+#endif // From ifndef
