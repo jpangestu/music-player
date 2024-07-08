@@ -57,8 +57,7 @@ int main() {
 
     vector<string> allMusicLoc;
     vector<Music*> allMusic;
-    string musicInQue = " ";
-    Queue myQueue;
+    MusicQueue musicQueue;
 
     // Interface/UI
     string option;
@@ -88,7 +87,7 @@ int main() {
                     artist = tags.artist;
                     cout << title << " by " << artist << " has added to the library" << endl;
                     allMusic.emplace_back(new Music{title, artist, allMusicLoc[i]});
-                    myQueue.addSong(title, artist, allMusicLoc[i]);
+                    musicQueue.addMusic(title, artist, allMusicLoc[i]);
                 } else {
                     fprintf(stderr, "error: %s\n", mp3_id3_failure_reason());
                 }
@@ -99,7 +98,6 @@ int main() {
             }
         }
 
-        musicInQue = myQueue.musicInQue();
         cout << endl;
         printConfirm();
         goto libraryMenu;
@@ -155,33 +153,24 @@ int main() {
 
 
     nowPlayingMenu:
-    clearScreen();
-    vector<string> nowPlayingMenu = createNowPlayingList(musicInQue, maxLength, dummyQueueList);
+    //clearScreen();
+    vector<string> nowPlayingMenu = createNowPlayingList(musicQueue.getCurrentMusic(), maxLength, dummyQueueList);
     printUI(nowPlayingMenu, maxLength, NowPlaying);
     getline(cin, option);
 
     long counter;
 
     if (option == "?") {
-        if(musicInQue != "") {
-            if (counter % 2 == 1) {
-                myQueue.playCurrentSong(true);
-            } else if (counter % 2 == 0) {
-                myQueue.playCurrentSong(false);
-            }
-            counter++;
-        }
+        musicQueue.playOrPausedCurrentMusic();
         
         goto nowPlayingMenu;
     }
     // else if (option == "<") {
 
     // }
-    else if (option == ">") {
-        myQueue.playNextSong();
-        musicInQue = myQueue.musicInQue();
-        goto nowPlayingMenu;
-    }
+    // else if (option == ">") {
+    //     goto nowPlayingMenu;
+    // }
     // else if (option == "1") {
 
     // } else if (option == "2") {
@@ -194,7 +183,6 @@ int main() {
 
     // }
     else if (option == "6") {
-        myQueue.shuffleQueue();
         goto nowPlayingMenu;
     }
     // else if (option == "7") {
@@ -207,7 +195,6 @@ int main() {
     } else if (option == "0") {
         exit(EXIT_SUCCESS);
     } else if (option == "display") {
-        myQueue.displayPlaylist();
         printConfirm();
         goto nowPlayingMenu;
     } else {

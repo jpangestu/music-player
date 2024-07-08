@@ -1,3 +1,12 @@
+#ifndef MUSIC_UI_H_
+#define MUSIC_UI_H_
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <conio.h> // getch()
+#include <cmath> // floor()
+
 enum MenuType {
     NowPlaying, Library, Playlist
 };
@@ -15,3 +24,6 @@ std::string printNowPlaying(std::string message, int maxLength, PageAlignment pa
 std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, int maxLength, std::vector<std::string> queueList);
 void clearScreen();
 void printConfirm();
+
+
+#endif // From ifndef

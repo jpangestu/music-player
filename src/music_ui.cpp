@@ -1,12 +1,3 @@
-#ifndef MUSIC_UI_H_
-#define MUSIC_UI_H_
-
-#include <iostream>
-#include <string>
-#include <vector>
-#include <conio.h> // getch()
-#include <cmath> // floor()
-
 #include "music_ui.hpp"
 
 // Helper for the main printUI function
@@ -282,6 +273,3 @@ void printConfirm() {
     getch();
     clearScreen();
 }
-
-
-#endif // From ifndef
