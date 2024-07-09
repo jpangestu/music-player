@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <thread>
 #include <cmath> // floor
+#include <random>
 
 enum PlayStatus {
     notPlaying,
@@ -37,12 +38,17 @@ class MusicQueue
     public:
         MusicQueue();
         void addMusic(Music* newMusic);
+        void searchMusic(std::string title);
+        void removeMusic();
         void playOrPausedCurrentMusic();
         std::string getCurrentMusic();
+        void setCurrentMusic(int position);
         void playNextMusic();
         void playPrevMusic();
         void setQueueToCircular();
         std::vector<std::string> getQueueList(int maxLength);
+        void sort(std::vector<Music*> music);
+        void shuffle(std::vector<Music*> music);
 };
 
 std::string convertPath(std::string path);

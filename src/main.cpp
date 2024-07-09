@@ -68,6 +68,7 @@ int main() {
 
 
     vector<Music*> allMusic; // All music in the library is stored here
+    vector<Music*> currentQueue; // Currently played queue (can be library or playlist)
     MusicQueue musicQueue;
 
     // Interface/UI
@@ -75,6 +76,8 @@ int main() {
 
     libraryMenu:
     clearScreen();
+    cout << endl << endl;
+    libraryMenuErr:
     printUI(musicLibraryMenu, maxLength, Library);
     getline(cin, option);
 
@@ -126,6 +129,8 @@ int main() {
         }
         musicQueue.setQueueToCircular();
 
+        currentQueue = allMusic;
+
         cout << musicPath.size() << " song(s) found!" << endl;
         cout << countSuccess << " song(s) successfully added to the library" << endl;
         cout << countError << " error(s) occured during import" << endl <<endl;
@@ -173,9 +178,9 @@ int main() {
     // } else if (option == "4") {
 
     // }
-    else if (option == "8") {
+    else if (option == "<") {
         goto nowPlayingMenu;
-    } else if (option == "9") {
+    } else if (option == ">") {
         goto playlistMenu;
     } else if (option == "0") {
         exit(EXIT_SUCCESS);
@@ -186,6 +191,8 @@ int main() {
 
     playlistMenu:
     clearScreen();
+    cout << endl << endl;
+    playlistMenuErr:
     printUI(playlistMenu, maxLength, Playlist);
     getline(cin, option);
 
@@ -198,9 +205,9 @@ int main() {
     // } else if (option == "4") {
         
     // } else
-    if (option == "8") {
+    if (option == "<") {
         goto libraryMenu;
-    } else if (option == "9") {
+    } else if (option == ">") {
         goto nowPlayingMenu;
     } else if (option == "0") {
         exit(EXIT_SUCCESS);
@@ -211,49 +218,52 @@ int main() {
 
     nowPlayingMenu:
     clearScreen();
+    cout << endl << endl;
     vector<string> nowPlayingMenu = createNowPlayingList(musicQueue.getCurrentMusic(), maxLength, musicQueue.getQueueList(5));
     printUI(nowPlayingMenu, maxLength, NowPlaying);
     getline(cin, option);
 
     if (option == "?") {
         musicQueue.playOrPausedCurrentMusic();
-        
         goto nowPlayingMenu;
-    }
-    else if (option == "<") {
+    } else if (option == "<<") {
         musicQueue.playPrevMusic();
         goto nowPlayingMenu;
-    }
-    else if (option == ">") {
+    } else if (option == ">>") {
         musicQueue.playNextMusic();
         goto nowPlayingMenu;
-    }
-    // else if (option == "1") {
-
-    // } else if (option == "2") {
-
-    // } else if (option == "3") {
-        
-    // } else if (option == "4") {
-        
-    // } else if (option == "5") {
-
-    // }
-    else if (option == "6") {
+    } else if (option == "]") {
+        musicQueue.shuffle(currentQueue);
         goto nowPlayingMenu;
-    }
-    // else if (option == "7") {
-
-    // }
-    else if (option == "8") {
+    } else if (option == "[") {
+        musicQueue.sort(currentQueue);
+        goto nowPlayingMenu;
+    } else if (option == "1") {
+        musicQueue.setCurrentMusic(-2);
+        musicQueue.playOrPausedCurrentMusic();
+        goto nowPlayingMenu;
+    } else if (option == "2") {
+        musicQueue.setCurrentMusic(-1);
+        musicQueue.playOrPausedCurrentMusic();
+        goto nowPlayingMenu;
+    } else if (option == "3") {
+        musicQueue.setCurrentMusic(0);
+        musicQueue.playOrPausedCurrentMusic();
+        goto nowPlayingMenu;
+    } else if (option == "4") {
+        musicQueue.setCurrentMusic(1);
+        musicQueue.playOrPausedCurrentMusic();
+        goto nowPlayingMenu;
+    } else if (option == "5") {
+        musicQueue.setCurrentMusic(2);
+        musicQueue.playOrPausedCurrentMusic();
+        goto nowPlayingMenu;
+    } else if (option == "<") {
         goto playlistMenu;
-    } else if (option == "9") {
+    } else if (option == ">") {
         goto libraryMenu;
     } else if (option == "0") {
         exit(EXIT_SUCCESS);
-    } else if (option == "display") {
-        printConfirm();
-        goto nowPlayingMenu;
     } else {
         goto nowPlayingMenu;
     }

@@ -25,6 +25,10 @@ void MusicQueue::addMusic(Music* newMusic) {
     }
 }
 
+void MusicQueue::removeMusic() {
+
+}
+
 // Play or paused music based on the playback status
 void MusicQueue::playOrPausedCurrentMusic() {
     if (queueFront == nullptr) {
@@ -86,7 +90,29 @@ void MusicQueue::playOrPausedCurrentMusic() {
 // Return Artist and Title of the music that's currently in queue (queueCurrent)
 // Return value: vector[1] = title, vector[2] = artist
 std::string MusicQueue::getCurrentMusic() {
+    if (queueCurrent == nullptr) {
+        return "";
+    }
     return queueCurrent->title + " - " + queueCurrent->artist;
+}
+
+void MusicQueue::setCurrentMusic(int position) {
+    if (position == 0) {
+        mciSendStringW(L"close mp3", NULL, 0, NULL);
+        queueCurrent->playStatus = notPlaying;
+    } else if (position < 0) {
+        for (int i = position; i < 0; i++) {
+            mciSendStringW(L"close mp3", NULL, 0, NULL);
+            queueCurrent->playStatus = notPlaying;
+            queueCurrent = queueCurrent->prev;
+        }
+    } else {
+        for (int i = position; i > 0; i--) {
+            mciSendStringW(L"close mp3", NULL, 0, NULL);
+            queueCurrent->playStatus = notPlaying;
+            queueCurrent = queueCurrent->next;
+        }
+    }
 }
 
 // Play next music in queue
@@ -124,6 +150,13 @@ std::vector<std::string> MusicQueue::getQueueList(int maxLength) {
     Music* originalCurrentMusic = queueCurrent;
     std::vector<std::string> queueList;
 
+    if (queueCurrent == nullptr) {
+        for (int i = 0; i < maxLength; i++) {
+            queueList.insert(queueList.end(), "");
+        }
+        return queueList;
+    }
+
     /* Set queuCurrent to select the previous song first because the currently played
     music should be in the middle of the list (not in the beginning of the list)
     */
@@ -133,7 +166,7 @@ std::vector<std::string> MusicQueue::getQueueList(int maxLength) {
 
     // Save song title to the queueList
     for (int i = 0; i < maxLength; i++) {
-        queueList.insert(queueList.end(), queueCurrent->title);
+        queueList.insert(queueList.end(), std::to_string(i + 1) + ". " + queueCurrent->title);
         queueCurrent = queueCurrent->next;
     }
 
@@ -141,6 +174,41 @@ std::vector<std::string> MusicQueue::getQueueList(int maxLength) {
     return queueList;
 }
 
+void MusicQueue::sort(std::vector<Music*> music) {
+    Music * currentMusic = queueCurrent;
+    std::sort(std::begin(music), std::end(music), compareMusicByTitle);
+
+    for (int i = 0; i < music.size(); i++) {      
+        // Reset queue
+        if (i == 0) {
+            queueCurrent = nullptr;
+            queueFront = nullptr;
+            queueRear = nullptr;
+        }
+        addMusic(music[i]);
+    }
+    queueCurrent = currentMusic;
+    setQueueToCircular();
+}
+
+void MusicQueue::shuffle(std::vector<Music*> music) {
+    Music * currentMusic = queueCurrent;
+    auto rd = std::random_device {}; 
+    auto rng = std::default_random_engine { rd() };
+    std::shuffle(std::begin(music), std::end(music), rng);
+
+    for (int i = 0; i < music.size(); i++) {      
+        // Reset queue
+        if (i == 0) {
+            queueCurrent = nullptr;
+            queueFront = nullptr;
+            queueRear = nullptr;
+        }
+        addMusic(music[i]);
+    }
+    queueCurrent = currentMusic;
+    setQueueToCircular();
+}
 
 // Convert single backslash in windows path to forward backslash
 std::string convertPath(std::string path) {

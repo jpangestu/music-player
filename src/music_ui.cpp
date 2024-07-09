@@ -73,11 +73,11 @@ void printUI(std::vector<std::string> list, int maxLength, MenuType menuType) {
         // Print lower border option based on position (type of menu)
         if (menuType == NowPlaying) {
             if (i == 2) {
-                lowerOption += "8. Playlist | 9. Library |";
-                i += 26;
+                lowerOption += "< Playlist | Library > |";
+                i += 24;
 
-                for (int j = 0; j < 26; j++) {
-                    if (j == 12 || j == 25) {
+                for (int j = 0; j < 24; j++) {
+                    if (j == 11 || j == 23) {
                         lowerStrip+= "+";
                     } else {
                         lowerStrip += "-";
@@ -86,11 +86,11 @@ void printUI(std::vector<std::string> list, int maxLength, MenuType menuType) {
             }
         } else if (menuType == Library) {
             if (i == 2) {
-                lowerOption += "8. Now Playing | 9. Playlist |";
-                i += 30;
+                lowerOption += "< Now Playing | Playlist > |";
+                i += 28;
                 
-                for (int j = 0; j < 30; j++) {
-                    if (j == 15 || j == 29) {
+                for (int j = 0; j < 28; j++) {
+                    if (j == 14 || j == 27) {
                         lowerStrip+= "+";
                     } else {
                         lowerStrip += "-";
@@ -99,11 +99,11 @@ void printUI(std::vector<std::string> list, int maxLength, MenuType menuType) {
             }
         } else {
             if (i == 2) {
-                lowerOption += "8. Library | 9. Now Playing |";
-                i += 29;
+                lowerOption += "< Library | Now Playing > |";
+                i += 27;
                 
-                for (int j = 0; j < 29; j++) {
-                    if (j == 11 || j == 28) {
+                for (int j = 0; j < 27; j++) {
+                    if (j == 10 || j == 26) {
                         lowerStrip+= "+";
                     } else {
                         lowerStrip += "-";
@@ -200,12 +200,12 @@ std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, 
                 if (j == 1 || j == npMaxLength) {
                     str += " |";
                     j++;
-                } else if (j == 4) {
-                    str += "< Prev.";
+                } else if (j == 5) {
+                    str += "<< Prev.";
+                    j += 7;
+                } else  if (j == npMaxLength - 2 - 7) { // 2 is for counting the space
+                    str += "Next >>";
                     j += 6;
-                } else  if (j == npMaxLength - 2 - 6) { // 2 is for counting the space
-                    str += "Next >";
-                    j += 5;
                 } else if (j == npMaxLength/2 - 5) {
                     str += "? Play/Pause";
                     j += 11;
@@ -216,12 +216,12 @@ std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, 
                 if (j == 1 || j == npMaxLength) {
                     str += " |";
                     j++;
-                } else if (j == 4) {
-                    str += "6. Shuffle";
-                    j += 9;
-                } else  if (j == npMaxLength - 2 - 7) {
-                    str += "7. Sort";
-                    j += 6;
+                } else if (j == 5) {
+                    str += "[ Sort";
+                    j += 5;
+                } else  if (j == npMaxLength - 2 - 9) {
+                    str += "Shuffle ]";
+                    j += 8;
                 } else {
                     str += " ";
                 }
