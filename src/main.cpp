@@ -26,25 +26,24 @@ int maxLength = 100;
 
 // Find all .mp3 files in a directory (and all of it's subdirectory) and store it in vector
 vector<string> findMp3(string directory) {
-    vector<string> allEntry;
+    vector<filesystem::path> allEntry;
     vector<string> allMusic;
 
+    // Store all directory to allEntry
     for (const auto& dirEntry : filesystem::recursive_directory_iterator(directory)) {
-        auto path = dirEntry.path();
-        auto utf8 = path.u8string();
-        auto str = std::string(reinterpret_cast<char const*>(utf8.data()), utf8.size());
-        // all of the above conversion still not work, but I'll just leave it
-        allEntry.insert(allEntry.end(), str);
-        // allEntry.insert(allEntry.end(), dirEntry.path().string());
+        allEntry.insert(allEntry.end(), dirEntry.path().generic_u8string());
     }
 
+    // Select only the .mp3 file and store it to allMusic
     int index = 0;
-    for (vector<string>::iterator i = allEntry.begin(); i < allEntry.end(); i++) {
+    for (vector<filesystem::path>::iterator i = allEntry.begin(); i < allEntry.end(); i++) {
             filesystem::path tmp = allEntry[index];
+            auto utf8 = tmp.u8string();
+            auto str = std::string(reinterpret_cast<char const*>(utf8.data()), utf8.size());
             error_code error_code;
             // Store all .mp3 to allMusic
             if (tmp.extension() == ".mp3") {
-                allMusic.insert(allMusic.end(), allEntry[index]);
+                allMusic.insert(allMusic.end(), str);
             }
 
             index++; // Index = vector iterator
@@ -67,7 +66,8 @@ int main() {
     vector<string> musicLibraryMenu{"Music Library", " Choose one option below by typing the number/symbol (0,1,<,... )",
                                      "1. Add song to library", "2. Show all song in the library", "3. Search Song", "4. Delete song from the library"};
 
-    vector<Music*> allMusic;
+
+    vector<Music*> allMusic; // All music in the library is stored here
     MusicQueue musicQueue;
 
     // Interface/UI
@@ -122,13 +122,24 @@ int main() {
         // Sort all music and add to music queue
         sort(allMusic.begin(), allMusic.end(), compareMusicByTitle);
         for (int i = 0; i < allMusic.size(); i++) {      
-            musicQueue.addMusic(allMusic[i]->title, allMusic[i]->artist, musicPath[i]);
+            musicQueue.addMusic(allMusic[i]);
         }
         musicQueue.setQueueToCircular();
 
         cout << musicPath.size() << " song(s) found!" << endl;
         cout << countSuccess << " song(s) successfully added to the library" << endl;
         cout << countError << " error(s) occured during import" << endl <<endl;
+
+        getch();
+        string logOption;
+        cout << "Enter ! to view log" << endl;
+        cin >> logOption;
+
+        if (logOption == "!") {
+            for (int i = 0; i < log.size(); i++) {
+                cout << log[i] << endl << endl;
+            }
+        }
 
         printConfirm();
         goto libraryMenu;
@@ -200,11 +211,9 @@ int main() {
 
     nowPlayingMenu:
     clearScreen();
-    vector<string> nowPlayingMenu = createNowPlayingList(musicQueue.getCurrentMusic(), maxLength, dummyQueueList);
+    vector<string> nowPlayingMenu = createNowPlayingList(musicQueue.getCurrentMusic(), maxLength, musicQueue.getQueueList(5));
     printUI(nowPlayingMenu, maxLength, NowPlaying);
     getline(cin, option);
-
-    long counter;
 
     if (option == "?") {
         musicQueue.playOrPausedCurrentMusic();

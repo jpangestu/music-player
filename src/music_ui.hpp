@@ -20,8 +20,8 @@ extern int maxLength;
 
 std::string printUI(std::string message, int maxLength, PageAlignment pageAlignment);
 void printUI(std::vector<std::string> list, int maxLength, MenuType menuType);
-std::string printNowPlaying(std::string message, int maxLength, PageAlignment pageAlignment);
 std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, int maxLength, std::vector<std::string> queueList);
+std::string printNowPlaying(std::string message, int maxLength, PageAlignment pageAlignment);
 void clearScreen();
 void printConfirm();
 

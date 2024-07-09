@@ -14,8 +14,7 @@ MusicQueue::MusicQueue() {
 }
 
 // Add new Music (struct) node
-void MusicQueue::addMusic(std::string title, std::string artist, std::string path) {
-    Music* newMusic = new Music(title, artist, path);
+void MusicQueue::addMusic(Music* newMusic) {
     if (queueRear == nullptr) {
         queueFront = queueRear = queueCurrent = newMusic;
     }
@@ -84,9 +83,10 @@ void MusicQueue::playOrPausedCurrentMusic() {
     }
 }
 
-// Return "Artist - Title" of the music that's currently in queue
+// Return Artist and Title of the music that's currently in queue (queueCurrent)
+// Return value: vector[1] = title, vector[2] = artist
 std::string MusicQueue::getCurrentMusic() {
-    return queueCurrent->artist + " - " + queueCurrent->title;
+    return queueCurrent->title + " - " + queueCurrent->artist;
 }
 
 // Play next music in queue
@@ -119,8 +119,30 @@ void MusicQueue::setQueueToCircular() {
     queueRear->next = queueFront;
 }
 
+// Return list of music in queue (in vector of string)
+std::vector<std::string> MusicQueue::getQueueList(int maxLength) {
+    Music* originalCurrentMusic = queueCurrent;
+    std::vector<std::string> queueList;
 
-// Convert single backslash in windows path to double backslash
+    /* Set queuCurrent to select the previous song first because the currently played
+    music should be in the middle of the list (not in the beginning of the list)
+    */
+    for (int i = 0; i < floor(maxLength/2); i++) {
+        queueCurrent = queueCurrent->prev;
+    }
+
+    // Save song title to the queueList
+    for (int i = 0; i < maxLength; i++) {
+        queueList.insert(queueList.end(), queueCurrent->title);
+        queueCurrent = queueCurrent->next;
+    }
+
+    queueCurrent = originalCurrentMusic;
+    return queueList;
+}
+
+
+// Convert single backslash in windows path to forward backslash
 std::string convertPath(std::string path) {
     std::string convertedPath;
 
@@ -134,6 +156,7 @@ std::string convertPath(std::string path) {
     return convertedPath;
 }
 
+// For std::sort (from <algorithm>) 3rd parameter
 bool compareMusicByTitle(const Music* a, const Music* b) {
     return a->title < b->title;
 }

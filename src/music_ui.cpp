@@ -1,4 +1,5 @@
 #include "music_ui.hpp"
+#include "queue.hpp"
 
 // Helper for the main printUI function
 std::string printUI(std::string message, int maxLength, PageAlignment pageAlignment) {
@@ -136,6 +137,7 @@ void printUI(std::vector<std::string> list, int maxLength, MenuType menuType) {
     std::cout << "| Input: ";
 }
 
+// Helper for createNowPlayingList
 std::string printNowPlaying(std::string message, int maxLength, PageAlignment pageAlignment) {
     message;
     size_t length = maxLength - message.length();
@@ -161,9 +163,10 @@ std::string printNowPlaying(std::string message, int maxLength, PageAlignment pa
         return str;
     }  
 }
+
 // Create Now Playing Menu list (the contents)
 std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, int maxLength, std::vector<std::string> queueList) {
-    maxLength -= 2; // For counting left & right border
+    maxLength -= 3; // For counting left & right border
     int npMaxLength = maxLength * 60/100;
     int queMaxLength = maxLength - npMaxLength;
     for (int i = 0; i < queueList.size(); i++) {
@@ -178,20 +181,25 @@ std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, 
         // Now Playing section only
         for (int j = 1; j <= npMaxLength; j++) { // j starts at 1
             if (i == 1 || i == 9) {
-                if (j == 1 || j == npMaxLength) {
-                    str += "+";
+                if (j == 1) {
+                    str += " +";
+                    j++;
+                } else if (j == npMaxLength) {
+                    str += "-+";
                 } else {
                     str += "-";
                 }
             } else if (i == 4 || i == 6) {
                 if (j == 1 || j == npMaxLength) {
-                    str += "|";
+                    str += " |";
+                    j++;
                 } else {
                     str += " ";
                 }
             } else if (i == 7) {
                 if (j == 1 || j == npMaxLength) {
-                    str += "|";
+                    str += " |";
+                    j++;
                 } else if (j == 4) {
                     str += "< Prev.";
                     j += 6;
@@ -206,7 +214,8 @@ std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, 
                 }
             }  else if (i == 8) {
                 if (j == 1 || j == npMaxLength) {
-                    str += "|";
+                    str += " |";
+                    j++;
                 } else if (j == 4) {
                     str += "6. Shuffle";
                     j += 9;
@@ -222,10 +231,10 @@ std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, 
         if (i == 1) {
             str += printNowPlaying("Queue", queMaxLength, Middle);
         } else if (i == 2) {
-            str = printUI("Now Playing", npMaxLength, Middle);
+            str = " " + printUI("Now Playing", npMaxLength, Middle);
             str += printNowPlaying(queueList[0], queMaxLength, Left);
         } else if (i == 3) {
-            str = printUI("-------------", npMaxLength, Middle);
+            str = " " + printUI("-------------", npMaxLength, Middle);
             str += printNowPlaying(queueList[1], queMaxLength, Left);
         } else if (i == 4) {
             for (int a = 0; a < queMaxLength; a++) {
@@ -239,7 +248,7 @@ std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, 
                 }
                 currentlyPlayedMusic = tmp;
             }
-            str = printUI(currentlyPlayedMusic, npMaxLength, Middle);
+            str = " " + printUI(currentlyPlayedMusic, npMaxLength, Middle);
             str += printNowPlaying(queueList[2], queMaxLength, Left);
         } else if (i == 6) {
             for (int a = 0; a < queMaxLength; a++) {

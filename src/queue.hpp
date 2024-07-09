@@ -3,10 +3,12 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <windows.h>
-#include <algorithm>
+#include <algorithm> // sort
 #include <filesystem>
 #include <thread>
+#include <cmath> // floor
 
 enum PlayStatus {
     notPlaying,
@@ -34,12 +36,13 @@ class MusicQueue
         Music* queueCurrent; // Currently in queue (ready to be played)
     public:
         MusicQueue();
-        void addMusic(std::string title, std::string artist, std::string dir);
+        void addMusic(Music* newMusic);
         void playOrPausedCurrentMusic();
         std::string getCurrentMusic();
         void playNextMusic();
         void playPrevMusic();
         void setQueueToCircular();
+        std::vector<std::string> getQueueList(int maxLength);
 };
 
 std::string convertPath(std::string path);
