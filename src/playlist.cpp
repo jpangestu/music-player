@@ -1,23 +1,23 @@
 #include "playlist.hpp"
 
-Playlist::Playlist(const std::string& name) : name(name) {}
+MusicPlaylist::MusicPlaylist(const std::string& name) : name(name) {}
 
-void Playlist::addSong(const std::string& song) {
+void MusicPlaylist::addSong(const std::string& song) {
     songs.push_back(song);
 }
 
-void Playlist::removeSong(const std::string& song) {
+void MusicPlaylist::removeSong(const std::string& song) {
     songs.erase(std::remove(songs.begin(), songs.end(), song), songs.end());
 }
 
-std::vector<std::string> Playlist::getSongs() const {
+std::vector<std::string> MusicPlaylist::getSongs() const {
     return songs;
 }
 
-std::string Playlist::getName() const {
+std::string MusicPlaylist::getName() const {
     return name;
 }
 
-void Playlist::setName(const std::string& newName) {
+void MusicPlaylist::setName(const std::string& newName) {
     name = newName;
 }
