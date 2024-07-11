@@ -21,16 +21,70 @@ void MusicQueue::addMusic(Music* newMusic) {
     else {
         queueRear->next = newMusic; // queueRear hasn't been updated yet
         queueRear->next->prev = queueRear;
-        queueRear = newMusic; // queueRear updated
+        queueRear = queueRear->next; // queuRear updated
     }
 }
 
-void MusicQueue::removeMusic() {
+std::vector<Music*> MusicQueue::searchMusic(std::vector<Music*> queue, std::string pattern) {
+    std::vector<Music*> matchedMusic;
+    // Change pattern to lowercase for case insensitive matching
+    std::transform(pattern.begin(), pattern.end(), pattern.begin(), [](unsigned char c){ return std::tolower(c); });
+    for (int i = 0; i < queue.size(); i++) {
+        std::string str = queue[i]->title;
+        std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c){ return std::tolower(c); });
+        size_t index = str.find(pattern);
+        if (index != std::string::npos) { // return value of find() if pattern not found is std::string::npos (aka -1)
+            matchedMusic.insert(matchedMusic.end(), queue[i]);
+        }
+    }
+    return matchedMusic;
+}
+
+void MusicQueue::removeMusic(std::vector<Music*> allMusic) {
 
 }
 
+// Return true if a music already exists in library, false otherwise
+bool MusicQueue::musicInLibrary(std::vector<Music*> allMusic, std::string musicPath) {
+    if (allMusic.size() == 0) {
+        return false;
+    }
+
+    for (int i = 0; i < allMusic.size(); i++) {
+        if (musicPath == allMusic[i]->path) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Create thread for checking if a music is finished playing. If yes, play next song in queue.
+void MusicQueue::autoPlayNextMusic() {
+    std::thread playInBack(&MusicQueue::autoPlayNextMusicDetails, this);
+    if (playInBack.joinable()) {
+        playInBack.detach();
+    }
+}
+
+// Implementation details for autoPlayNextMusic()
+void MusicQueue::autoPlayNextMusicDetails() {
+    // Wait for notification that playback has finished
+    char status[128];
+    do {
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000)); // Sleep briefly to avoid excessive CPU usage
+        mciSendStringA("status mp3 mode", status, sizeof(status), nullptr);
+        std::cout << status << std::endl;
+    } while (strcmp(status, "stopped") != 0);
+
+    queueCurrent->playStatus = notPlaying;
+    mciSendStringW(L"close mp3", NULL, 0, NULL);
+    queueCurrent = queueCurrent->next;
+    playOrPauseCurrentMusic();
+}
+
 // Play or paused music based on the playback status
-void MusicQueue::playOrPausedCurrentMusic() {
+void MusicQueue::playOrPauseCurrentMusic() {
     if (queueFront == nullptr) {
         return;
     } else {
@@ -43,40 +97,9 @@ void MusicQueue::playOrPausedCurrentMusic() {
             std::wstring finalPath = L"open \"" + pathConverted + L"\" type mpegvideo alias mp3";
 
             mciSendStringW(finalPath.c_str(), NULL, 0, NULL);
-            mciSendStringW(L"play mp3", NULL, 0, NULL);
+            DWORD_PTR instance = (DWORD_PTR)this;
+            mciSendStringW(L"play mp3 notify", NULL, 0, NULL);
             queueCurrent->playStatus = playing;
-
-            // Check when the music has finished playing
-            // std::thread checkMusicThread([this]() {
-            //     std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Optional delay
-            //     while (true) {
-            //         wchar_t  status[128] = {};
-            //         if (mciSendStringW(L"status mp3 mode", status, sizeof(status), NULL) != 0) {
-            //             std::cerr << "Failed to get status: " << GetLastError() << std::endl;
-            //         }
-                    
-            //         // Output raw status
-            //         std::wcout << L"Status: " << status << std::endl;
-
-            //         std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-            //         std::string utf8Str = converter.to_bytes(status);
-            //         if (strcmp(utf8Str.c_str(), "stopped") == 0) {
-            //             // Music has finished playing
-            //             queueCurrent->playStatus = notPlaying;
-            //             mciSendStringW(L"close mp3", NULL, 0, NULL);
-            //             if (queueCurrent->next != nullptr) {
-            //                 queueCurrent = queueCurrent->next;
-            //                 playOrPausedCurrentMusic(); // Play the next music
-            //             } else {
-            //                 std::cout << "End of the queue." << std::endl;
-            //             }
-            //             break;
-            //         }
-            //         std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // Check every second
-            //     }
-            // });
-            // checkMusicThread.detach(); // Detach thread to run asynchronously
-
         } else if(queueCurrent->playStatus == paused) {
             mciSendStringW(L"resume mp3", NULL, 0, NULL);
             queueCurrent->playStatus = playing;
@@ -115,6 +138,14 @@ void MusicQueue::setCurrentMusic(int position) {
     }
 }
 
+void MusicQueue::setCurrentMusic(std::vector<Music*> queue, std::string musicPath) {
+    for (int i = 0; i < queue.size(); i++) {
+        if (musicPath == queue[i]->path) {
+            queueCurrent = queue[i];
+        }
+    }
+}
+
 // Play next music in queue
 void MusicQueue::playNextMusic() {
     if (queueFront == nullptr) {
@@ -123,7 +154,7 @@ void MusicQueue::playNextMusic() {
         mciSendStringW(L"close mp3", NULL, 0, NULL);
         queueCurrent->playStatus = notPlaying;
         queueCurrent = queueCurrent->next;
-        playOrPausedCurrentMusic();
+        playOrPauseCurrentMusic();
     }
 }
 
@@ -135,7 +166,7 @@ void MusicQueue::playPrevMusic() {
         mciSendStringW(L"close mp3", NULL, 0, NULL);
         queueCurrent->playStatus = notPlaying;
         queueCurrent = queueCurrent->prev;
-        playOrPausedCurrentMusic();
+        playOrPauseCurrentMusic();
     }
 }
 
@@ -174,37 +205,37 @@ std::vector<std::string> MusicQueue::getQueueList(int maxLength) {
     return queueList;
 }
 
-void MusicQueue::sort(std::vector<Music*> music) {
+void MusicQueue::sort(std::vector<Music*> currentQueue) {
     Music * currentMusic = queueCurrent;
-    std::sort(std::begin(music), std::end(music), compareMusicByTitle);
+    std::sort(std::begin(currentQueue), std::end(currentQueue), compareMusicByTitle);
 
-    for (int i = 0; i < music.size(); i++) {      
+    for (int i = 0; i < currentQueue.size(); i++) {      
         // Reset queue
         if (i == 0) {
             queueCurrent = nullptr;
             queueFront = nullptr;
             queueRear = nullptr;
         }
-        addMusic(music[i]);
+        addMusic(currentQueue[i]);
     }
     queueCurrent = currentMusic;
     setQueueToCircular();
 }
 
-void MusicQueue::shuffle(std::vector<Music*> music) {
+void MusicQueue::shuffle(std::vector<Music*> currentQueue) {
     Music * currentMusic = queueCurrent;
     auto rd = std::random_device {}; 
     auto rng = std::default_random_engine { rd() };
-    std::shuffle(std::begin(music), std::end(music), rng);
+    std::shuffle(std::begin(currentQueue), std::end(currentQueue), rng);
 
-    for (int i = 0; i < music.size(); i++) {      
+    for (int i = 0; i < currentQueue.size(); i++) {      
         // Reset queue
         if (i == 0) {
             queueCurrent = nullptr;
             queueFront = nullptr;
             queueRear = nullptr;
         }
-        addMusic(music[i]);
+        addMusic(currentQueue[i]);
     }
     queueCurrent = currentMusic;
     setQueueToCircular();

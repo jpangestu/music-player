@@ -6,19 +6,13 @@
 #include <algorithm> // sort()
 #include <conio.h> // getch()
 
-// For forcing unicode standard
-// #include <io.h>
-// #include <fcntl.h>
-// #include <locale>
-// #include <clocale>
-// #include <cstdio>
-
 #include "music_ui.hpp"
 #include "queue.hpp"
 
 // For reading .mp3 files tag (https://github.com/Arcxm/mp3_id3_tags)
 #define MP3_ID3_TAGS_IMPLEMENTATION
 #include "../lib/mp3_id3_tags/mp3_id3_tags.h"
+
 
 using namespace std;
 
@@ -51,8 +45,29 @@ vector<string> findMp3(string directory) {
     return allMusic;
 }
 
+// Implementation details for autoPlayNextMusic()
+void autoPlayNextMusicDetails(MusicQueue musicQueue) {
+    // Wait for notification that playback has finished
+    char status[128];
+    do {
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000)); // Sleep briefly to avoid excessive CPU usage
+        mciSendStringA("status mp3 mode", status, sizeof(status), nullptr);
+        std::cout << status << std::endl;
+    } while (strcmp(status, "stopped") != 0);
 
+    // queueCurrent->playStatus = notPlaying;
+    mciSendStringW(L"close mp3", NULL, 0, NULL);
+    // queueCurrent = queueCurrent->next;
+    musicQueue.playOrPauseCurrentMusic();
+}
 
+// Create thread for checking if a music is finished playing. If yes, play next song in queue.
+void autoPlayNextMusic(MusicQueue musicQueue) {
+    std::thread playInBack(autoPlayNextMusicDetails, musicQueue);
+    if (playInBack.joinable()) {
+        playInBack.detach();
+    }
+}
 
 
 int main() {
@@ -107,8 +122,10 @@ int main() {
                     title = tags.title;
                     artist = tags.artist;
                     log.emplace_back(title + " - " + artist + "successfully added to the library");
-                    allMusic.emplace_back(new Music{title, artist, musicPath[i]});
-                    countSuccess++;
+                    if (musicQueue.musicInLibrary(allMusic, musicPath[i]) == false) {
+                        allMusic.emplace_back(new Music{title, artist, musicPath[i]});
+                        countSuccess++;
+                    }
                 } else {
                     string err = mp3_id3_failure_reason();
                     log.emplace_back("Error: %s\n" + err);
@@ -122,9 +139,10 @@ int main() {
             }
         }
 
+        cout << endl << endl << endl;
         // Sort all music and add to music queue
         sort(allMusic.begin(), allMusic.end(), compareMusicByTitle);
-        for (int i = 0; i < allMusic.size(); i++) {      
+        for (int i = 0; i < allMusic.size(); i++) {
             musicQueue.addMusic(allMusic[i]);
         }
         musicQueue.setQueueToCircular();
@@ -173,9 +191,38 @@ int main() {
 
         getch();
     }
-    // else if (option == "3") {
-        
-    // } else if (option == "4") {
+    else if (option == "3") {
+        searchOption:
+        string title, searchOption;
+        clearScreen();
+        searchResult:
+        cout << "Search: "; getline(cin, title);
+        vector<Music*> matchedMusic = musicQueue.searchMusic(allMusic, title);
+        for (int i = 0; i < matchedMusic.size(); i++) {
+            cout << i + 1 << ". " << matchedMusic[i]->title << " - " << matchedMusic[i]->artist << endl;
+        }
+
+        cout << "? Re-search | < Back to Main Menu" << endl;
+        cout << "Input: "; getline(cin, searchOption);
+
+        try {
+            stoi(searchOption);
+        } catch (invalid_argument) {
+            if (searchOption == "?") {
+                goto searchOption;
+            }
+        }
+
+        if (stoi(searchOption) >= 1 and stoi(searchOption) <= 15) {
+            cout << "success" << endl;
+            getch();
+            goto libraryMenu;
+        } else if (searchOption == "<") {
+            goto libraryMenu;
+        } else {
+            goto searchResult;
+        }
+    } // else if (option == "4") {
 
     // }
     else if (option == "<") {
@@ -219,12 +266,13 @@ int main() {
     nowPlayingMenu:
     clearScreen();
     cout << endl << endl;
+    nowPlayingMenuErr:
     vector<string> nowPlayingMenu = createNowPlayingList(musicQueue.getCurrentMusic(), maxLength, musicQueue.getQueueList(5));
     printUI(nowPlayingMenu, maxLength, NowPlaying);
     getline(cin, option);
 
     if (option == "?") {
-        musicQueue.playOrPausedCurrentMusic();
+        musicQueue.playOrPauseCurrentMusic();
         goto nowPlayingMenu;
     } else if (option == "<<") {
         musicQueue.playPrevMusic();
@@ -240,23 +288,24 @@ int main() {
         goto nowPlayingMenu;
     } else if (option == "1") {
         musicQueue.setCurrentMusic(-2);
-        musicQueue.playOrPausedCurrentMusic();
+        musicQueue.playOrPauseCurrentMusic();
         goto nowPlayingMenu;
     } else if (option == "2") {
         musicQueue.setCurrentMusic(-1);
-        musicQueue.playOrPausedCurrentMusic();
+        musicQueue.playOrPauseCurrentMusic();
         goto nowPlayingMenu;
     } else if (option == "3") {
         musicQueue.setCurrentMusic(0);
-        musicQueue.playOrPausedCurrentMusic();
+        musicQueue.playOrPauseCurrentMusic();
         goto nowPlayingMenu;
     } else if (option == "4") {
         musicQueue.setCurrentMusic(1);
-        musicQueue.playOrPausedCurrentMusic();
+        musicQueue.playOrPauseCurrentMusic();
         goto nowPlayingMenu;
     } else if (option == "5") {
         musicQueue.setCurrentMusic(2);
-        musicQueue.playOrPausedCurrentMusic();
+        musicQueue.playOrPauseCurrentMusic();
+        // musicQueue.autoPlayNextMusic();
         goto nowPlayingMenu;
     } else if (option == "<") {
         goto playlistMenu;
@@ -264,6 +313,18 @@ int main() {
         goto libraryMenu;
     } else if (option == "0") {
         exit(EXIT_SUCCESS);
+    } else if (option == "test") {
+        // char status1[128];
+        // mciSendStringA("status mp3 mode", status1, sizeof(status1), nullptr);
+        // std::cout << status1 << std::endl;
+        char status[128];
+        do {
+            std::this_thread::sleep_for(std::chrono::milliseconds(3000)); // Sleep briefly to avoid excessive CPU usage
+            mciSendStringA("status mp3 mode", status, sizeof(status), nullptr);
+            std::cout << status << std::endl;
+        } while (strcmp(status, "stopped") != 0);
+        getch();
+        goto nowPlayingMenu;
     } else {
         goto nowPlayingMenu;
     }

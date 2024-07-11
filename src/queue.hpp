@@ -10,7 +10,9 @@
 #include <thread>
 #include <cmath> // floor
 #include <random>
+#include <future>
 
+// Playback Status
 enum PlayStatus {
     notPlaying,
     playing,
@@ -22,10 +24,11 @@ struct Music
     std::string title;
     std::string artist;
     std::string path; // Directory of the music file
-    PlayStatus playStatus;
+    PlayStatus playStatus; // Playback Status
     Music* next;
     Music* prev;
 
+    // Constructor
     Music(std::string Title, std::string Artist, std::string Path);
 };
 
@@ -38,21 +41,26 @@ class MusicQueue
     public:
         MusicQueue();
         void addMusic(Music* newMusic);
-        void searchMusic(std::string title);
-        void removeMusic();
-        void playOrPausedCurrentMusic();
+        std::vector<Music*> searchMusic(std::vector<Music*> queue, std::string);
+        bool musicInLibrary(std::vector<Music*> allMusic, std::string musicPath);
+        void removeMusic(std::vector<Music*> allMusic);
+        void playOrPauseCurrentMusic();
+        void autoPlayNextMusicDetails();
+        void autoPlayNextMusic();
         std::string getCurrentMusic();
         void setCurrentMusic(int position);
+        void setCurrentMusic(std::vector<Music*> queue, std::string musicPath);
         void playNextMusic();
         void playPrevMusic();
         void setQueueToCircular();
         std::vector<std::string> getQueueList(int maxLength);
-        void sort(std::vector<Music*> music);
-        void shuffle(std::vector<Music*> music);
+        void sort(std::vector<Music*> currentQueue);
+        void shuffle(std::vector<Music*> currentQueue);
 };
 
 std::string convertPath(std::string path);
 bool compareMusicByTitle(const Music* a, const Music* b);
+void monitorPlaybackStatus();
 
 
 #endif // From ifndef
