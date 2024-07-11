@@ -43,7 +43,7 @@ class MusicQueue
         void addMusic(Music* newMusic);
         std::vector<Music*> searchMusic(std::vector<Music*> queue, std::string);
         bool musicInLibrary(std::vector<Music*> allMusic, std::string musicPath);
-        void removeMusic(std::vector<Music*> allMusic);
+        void removeMusic(std::vector<Music*> allMusic, Music* musicToDelete);
         void playOrPauseCurrentMusic();
         void autoPlayNextMusicDetails();
         void autoPlayNextMusic();

@@ -25,6 +25,7 @@ void MusicQueue::addMusic(Music* newMusic) {
     }
 }
 
+// Return all music that matched the pattern
 std::vector<Music*> MusicQueue::searchMusic(std::vector<Music*> queue, std::string pattern) {
     std::vector<Music*> matchedMusic;
     // Change pattern to lowercase for case insensitive matching
@@ -40,8 +41,41 @@ std::vector<Music*> MusicQueue::searchMusic(std::vector<Music*> queue, std::stri
     return matchedMusic;
 }
 
-void MusicQueue::removeMusic(std::vector<Music*> allMusic) {
-
+void MusicQueue::removeMusic(std::vector<Music*> allMusic, Music* musicToDelete) {
+    if (allMusic.size() == 1) {
+        allMusic.clear();
+        queueCurrent = queueFront = queueRear = nullptr;
+    } else if (allMusic.size() == 2) {
+        int index = 0;
+        for (std::vector<Music*>::iterator it = allMusic.begin(); it != allMusic.end(); ++it) {
+            if (musicToDelete == allMusic[index]) {
+                allMusic.erase(it);
+                queueRear = queueCurrent;
+                queueCurrent = queueFront;
+                allMusic[index]->next = allMusic[index];
+                allMusic[index]->prev = allMusic[index];
+            }
+        }
+    } else {
+        int index = 0; // index = iterator
+        for (std::vector<Music*>::iterator it = allMusic.begin(); it != allMusic.end(); ++it) {
+            if (musicToDelete == allMusic[index]) {
+                Music* tmp;
+                if (musicToDelete == queueFront) {
+                    queueFront = queueFront->next;
+                } else if (musicToDelete == queueRear) {
+                    queueRear = queueRear->prev;
+                } else if (musicToDelete == queueCurrent) {
+                    queueCurrent = queueCurrent->next;
+                } else {
+                    allMusic[index]->prev->next = allMusic[index]->next;
+                    allMusic[index]->next->prev = allMusic[index]->prev;
+                    allMusic.erase(it);
+                }
+            }
+            index++;
+        }
+    }
 }
 
 // Return true if a music already exists in library, false otherwise
@@ -141,6 +175,8 @@ void MusicQueue::setCurrentMusic(int position) {
 void MusicQueue::setCurrentMusic(std::vector<Music*> queue, std::string musicPath) {
     for (int i = 0; i < queue.size(); i++) {
         if (musicPath == queue[i]->path) {
+            mciSendStringW(L"close mp3", NULL, 0, NULL);
+            queueCurrent->playStatus = notPlaying;
             queueCurrent = queue[i];
         }
     }
