@@ -242,6 +242,12 @@ int main() {
     }
     else if (option == "0") {
         exit(EXIT_SUCCESS);
+    } else if (option == "test") {
+        cout << "allMusic:" << endl;
+        for (int i = 0; i < allMusic.size(); i++) {
+            cout << allMusic[i]->title << " - " << allMusic[i]->artist << endl;
+        }
+        getch();
     }
     else {
         goto libraryMenu;
