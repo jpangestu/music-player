@@ -1,17 +1,17 @@
-#ifndef PLAYLIST_HPP
-#define PLAYLIST_HPP
+#ifndef PLAYLIST_H_
+#define PLAYLIST_H_
 
 #include <vector>
 #include <string>
-#include <algorithm> // For std::remove
+#include <algorithm>
 
-class Playlist {
+class MusicPlaylist {
 private:
     std::string name;
     std::vector<std::string> songs;
 
 public:
-    Playlist(const std::string& name);
+    MusicPlaylist(const std::string& name);
     void addSong(const std::string& song);
     void removeSong(const std::string& song);
     std::vector<std::string> getSongs() const;
