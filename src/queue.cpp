@@ -158,7 +158,6 @@ void MusicQueue::playOrPauseCurrentMusic() {
             std::wstring finalPath = L"open \"" + pathConverted + L"\" type mpegvideo alias mp3";
 
             mciSendStringW(finalPath.c_str(), NULL, 0, NULL);
-            DWORD_PTR instance = (DWORD_PTR)this;
             mciSendStringW(L"play mp3 notify", NULL, 0, NULL);
             queueCurrent->playStatus = playing;
         } else if(queueCurrent->playStatus == paused) {

@@ -45,6 +45,17 @@ vector<string> findMp3(string directory) {
     return allMusic;
 }
 
+// Remove unnecessary spaces
+// https://stackoverflow.com/questions/8362094/replace-multiple-spaces-with-one-space-in-a-string
+string rmMultSpace(string input) {
+    // Remove unnecessary space
+    std::string::iterator new_end = std::unique(input.begin(), input.end(),
+    [=](char lhs, char rhs){ return (lhs == rhs) && (lhs == ' '); }
+    );
+    input.erase(new_end, input.end());
+    return input;
+}
+
 
 int main() {
     // Define each menu list
@@ -60,6 +71,7 @@ int main() {
     vector<Music*> playlist[10]; // beta
     vector<Music*> currentQueue; // Currently played queue (can be library or playlist)
     MusicQueue musicQueue;
+    MusicPlayerUI musicPlayerUI;
 
     string option; // User's Input
 
@@ -143,14 +155,35 @@ int main() {
     }
     // Show all music in the library
     else if (option == "2") {
-        clearScreen();
+        string showOption;
 
-        for (int i = 0; i < allMusic.size(); i++) {
-            cout << i + 1  << ". "<< allMusic[i]->title << " - " << allMusic[i]->artist << endl;
+        showMenu:
+        clearScreen();
+        cout << endl << endl;
+        musicPlayerUI.showAllSong(allMusic);
+        getline(cin, showOption);
+
+        try {
+            stoi(showOption);
+        } catch (invalid_argument) {
+            if (showOption == "?") {
+                goto showMenu;
+            } else if (showOption == "<") {
+                goto libraryMenu;
+            } else {
+                goto showMenu;
+            }
         }
 
-        printConfirm();
-        goto libraryMenu;
+        if (stoi(showOption) >= 1 and stoi(showOption) <= 15) {
+            musicQueue.setCurrentMusic(currentQueue, allMusic[stoi(showOption) - 1]->path);
+            musicQueue.playOrPauseCurrentMusic();
+            goto nowPlayingMenu;
+        } else if (showOption == "0") {
+            exit(EXIT_SUCCESS);
+        } else {
+            goto showMenu;
+        }
     }
     // Search music
     else if (option == "3") {
@@ -160,6 +193,8 @@ int main() {
         clearScreen();
         cout << endl << endl;
         cout << "Search title: "; getline(cin, title);
+
+        title = rmMultSpace(title);
 
         searchResult:
         clearScreen();
@@ -202,6 +237,8 @@ int main() {
         cout << endl << endl;
         cout << "Search title to delete: "; getline(cin, title);
 
+        title = rmMultSpace(title);
+
         removeResult:
         clearScreen();
         cout << "  Enter the corresponding number to delete the song" << endl;
@@ -243,10 +280,6 @@ int main() {
     else if (option == "0") {
         exit(EXIT_SUCCESS);
     } else if (option == "test") {
-        cout << "allMusic:" << endl;
-        for (int i = 0; i < allMusic.size(); i++) {
-            cout << allMusic[i]->title << " - " << allMusic[i]->artist << endl;
-        }
         getch();
     }
     else {
