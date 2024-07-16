@@ -161,7 +161,7 @@ void printUI(std::vector<std::string> list, int maxLength, MenuType menuType) {
         }
     } else {
         for (int i = 0; i < list.size(); i++) {
-            if ( i == 0) {
+            if ( i == 0 || i == 1) {
             std::cout << printUI(list[i], maxLength, Middle) << std::endl;
             } else {
                 std::cout << printUI(list[i], maxLength, Left) << std::endl;
@@ -284,7 +284,7 @@ std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, 
                 }
                 currentlyPlayedMusic = tmp;
             }
-            str = " " + printUI(currentlyPlayedMusic, npMaxLength, Middle);
+            str = " " + printUI(" " + currentlyPlayedMusic, npMaxLength, Middle);
             str += printNowPlaying(queueList[2], queMaxLength, Left);
         } else if (i == 6) {
             for (int a = 0; a < queMaxLength; a++) {
@@ -307,9 +307,9 @@ std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, 
 
 void MusicPlayerUI::showAllSong(std::vector<Music*> allMusic) {
     // Find longest title length
-    int longestTitle = 0, longestArtist = 0; // longest content length;
+    int longestTitle = 0, longestArtist = 0, maxWidth = 0; // longest content length;
     std::string header1 = "No. ", header2 = "Title", header3 = "Artist";
-    std::string topSeparator, contentSeparator;
+    std::string contentSeparator, topMenuSeparator;
 
     //Find longest title
     for (int i = 0; i < allMusic.size(); i++) {
@@ -325,28 +325,35 @@ void MusicPlayerUI::showAllSong(std::vector<Music*> allMusic) {
         }
     }
 
-    topSeparator = contentSeparator = "+-";
-    topSeparator += "-------";
+    contentSeparator = topMenuSeparator = "+-";
     contentSeparator += "-----+-";
+    topMenuSeparator += "-----+-";
     for (int i = 0; i < longestTitle; i++) {
-        topSeparator += "-";
         contentSeparator += "-";
+        if (i == 0 || i == 17) {
+            topMenuSeparator += "+";
+        } else {
+            topMenuSeparator += "-";
+        }
     }
-    topSeparator += "---";
     contentSeparator += "-+-";
+    topMenuSeparator += "-+-";
     for (int i = 0; i < longestArtist; i++) {
-        topSeparator += "-";
         contentSeparator += "-";
+        if (i == longestArtist - 9 ) {
+            topMenuSeparator += "+";
+        } else {
+            topMenuSeparator += "-";
+        }
     }
-    topSeparator += "-+";
     contentSeparator += "-+";
+    topMenuSeparator += "-+";
+
+    maxWidth = 2 + header1.length() + 3 + longestTitle + 3 + longestArtist + 2;
 
     // Print header
-    std::cout << topSeparator << std::endl
-    << std::left
-    << "| " << std::setw(4 + 3 + longestTitle + 3 + longestArtist) << "!> Enter the corresponding number to play the song" << " |" << std::endl
-    << contentSeparator << std::endl
-    << "| " << header1 << " | " << std::setw(longestTitle) << centered(header2) << " | " << std::setw(longestArtist) << centered(header3) << " |" << std::endl
+    std:: cout << contentSeparator << std::endl
+    << std::setfill(' ')  << "| " << header1 << " | " << std::setw(longestTitle) << centered(header2) << " | " << std::setw(longestArtist) << centered(header3) << " |" << std::endl
     << contentSeparator << std::endl;
 
     // Print all songs
@@ -356,8 +363,37 @@ void MusicPlayerUI::showAllSong(std::vector<Music*> allMusic) {
         << "| "<< std::setw(4) << iter << " | " << std::setw(longestTitle) << allMusic[i]->title << " | " << std::setw(longestArtist) << allMusic[i]->artist << " |" <<std::endl;  
     }
 
-    std::cout << contentSeparator << std::endl
+    std::cout << topMenuSeparator << std::endl
+    << "| < Back |" << std::setw(maxWidth - 10 - 11) << centered(" ? Search Again |") << "| 0. Exit |" << std::endl
+    << "+--------+" << std::setfill('-') << std::setw(maxWidth - 10 - 11) << centered("----------------+") << "+---------+" << std::endl
+    << std::setfill(' ') << "| " << std::setw(4 + 3 + longestTitle + 3 + longestArtist) << "[!] Enter the corresponding number to play the song" << " |" << std::endl
     << "| Input: ";
+}
+
+void MusicPlayerUI::addMusic(int maxWidth, std::string directory, int songFound, int songAdded, int errorCount) {
+    
+}
+
+
+void MusicPlayerUI::printStrip(int maxWidth) {
+    for (int i = 0; i < maxWidth; i++) {
+        if (i == 0 || i == maxWidth - 1) {
+            std::cout << "+";
+        } else {
+            std::cout << "-";
+        }
+    }
+    std::cout << std::endl;
+}
+
+void MusicPlayerUI::printSpace(int maxWidth) {
+    for (int i = 0; i < maxWidth; i++) {
+        if (i == 0 || i == maxWidth - 1) {
+            std::cout << "|";
+        }
+        std::cout << " ";
+    }
+    std::cout << std::endl;
 }
 
 void clearScreen() {
@@ -368,11 +404,10 @@ void clearScreen() {
     }
 }
 
-void printConfirm() {
-    std::cout << "Press any key to go back to the Main Menu" << std::endl;
+void printConfirm(std:: string menuName) {
+    std::cout << "Press any key to go back to the " << menuName << std::endl;
     getch();
     clearScreen();
 }
-
 
 

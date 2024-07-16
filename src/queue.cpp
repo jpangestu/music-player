@@ -41,7 +41,7 @@ std::vector<Music*> MusicQueue::searchMusic(std::vector<Music*> queue, std::stri
     return matchedMusic;
 }
 
-void MusicQueue::removeMusic(std::vector<Music*> allMusic, Music* musicToDelete) {
+std::vector<Music*> MusicQueue::removeMusic(std::vector<Music*> allMusic, Music* musicToDelete) {
     if (allMusic.size() == 1) {
         allMusic.clear();
         queueCurrent = queueFront = queueRear = nullptr;
@@ -73,6 +73,7 @@ void MusicQueue::removeMusic(std::vector<Music*> allMusic, Music* musicToDelete)
                     allMusic[index]->prev->next = allMusic[index]->next;
                     allMusic[index]->next->prev = allMusic[index]->prev;
                     allMusic.erase(allMusic.begin());
+                    delete(allMusic[index]);
                 } else if (musicToDelete == queueRear) {
                     if (musicToDelete == queueCurrent) {
                         if (allMusic[index]->playStatus != notPlaying) {
@@ -85,6 +86,7 @@ void MusicQueue::removeMusic(std::vector<Music*> allMusic, Music* musicToDelete)
                     allMusic[index]->prev->next = allMusic[index]->next;
                     allMusic[index]->next->prev = allMusic[index]->prev;
                     allMusic.erase(allMusic.end());
+                    delete(allMusic[index]);
                 } else {
                     if (musicToDelete == queueCurrent) {
                         if (allMusic[index]->playStatus != notPlaying) {
@@ -95,14 +97,15 @@ void MusicQueue::removeMusic(std::vector<Music*> allMusic, Music* musicToDelete)
                     }
                     allMusic[index]->prev->next = allMusic[index]->next;
                     allMusic[index]->next->prev = allMusic[index]->prev;
-                    allMusic.erase(it - 1);
-                    // delete(allMusic[index]);
+                    allMusic.erase(it);
+                    delete(allMusic[index]);
                 }
                 break;
             }
             index++;
         }
     }
+    return allMusic;
 }
 
 // Return true if a music already exists in library, false otherwise
