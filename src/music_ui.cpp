@@ -1,6 +1,42 @@
 #include "music_ui.hpp"
 #include "queue.hpp"
 
+// Template for auto-centering output stream (act like std::left or std::right, but for center/middle)
+// https://stackoverflow.com/questions/14861018/center-text-in-fixed-width-field-with-stream-manipulators-in-c
+template<typename charT, typename traits = std::char_traits<charT> >
+class center_helper {
+    std::basic_string<charT, traits> str_;
+public:
+    center_helper(std::basic_string<charT, traits> str) : str_(str) {}
+    template<typename a, typename b>
+    friend std::basic_ostream<a, b>& operator<<(std::basic_ostream<a, b>& s, const center_helper<a, b>& c);
+};
+
+template<typename charT, typename traits = std::char_traits<charT> >
+center_helper<charT, traits> centered(std::basic_string<charT, traits> str) {
+    return center_helper<charT, traits>(str);
+}
+
+// redeclare for std::string directly so we can support anything that implicitly converts to std::string
+center_helper<std::string::value_type, std::string::traits_type> centered(const std::string& str) {
+    return center_helper<std::string::value_type, std::string::traits_type>(str);
+}
+
+template<typename charT, typename traits>
+std::basic_ostream<charT, traits>& operator<<(std::basic_ostream<charT, traits>& s, const center_helper<charT, traits>& c) {
+    std::streamsize w = s.width();
+    if (w > c.str_.length()) {
+        std::streamsize left = (w + c.str_.length()) / 2;
+        s.width(left);
+        s << c.str_;
+        s.width(w - left);
+        s << "";
+    } else {
+        s << c.str_;
+    }
+    return s;
+}
+
 // Helper for the main printUI function
 std::string printUI(std::string message, int maxLength, PageAlignment pageAlignment) {
     if (pageAlignment == Left) {
@@ -269,6 +305,61 @@ std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, 
     return nowPlayingMenu;
 }
 
+void MusicPlayerUI::showAllSong(std::vector<Music*> allMusic) {
+    // Find longest title length
+    int longestTitle = 0, longestArtist = 0; // longest content length;
+    std::string header1 = "No. ", header2 = "Title", header3 = "Artist";
+    std::string topSeparator, contentSeparator;
+
+    //Find longest title
+    for (int i = 0; i < allMusic.size(); i++) {
+        if (longestTitle < allMusic[i]->title.length()) {
+            longestTitle = allMusic[i]->title.length();
+        }
+    }
+
+    // Find longest artist length
+    for (int i = 0; i < allMusic.size(); i++) {
+        if (longestArtist < allMusic[i]->artist.length()) {
+            longestArtist = allMusic[i]->artist.length();
+        }
+    }
+
+    topSeparator = contentSeparator = "+-";
+    topSeparator += "-------";
+    contentSeparator += "-----+-";
+    for (int i = 0; i < longestTitle; i++) {
+        topSeparator += "-";
+        contentSeparator += "-";
+    }
+    topSeparator += "---";
+    contentSeparator += "-+-";
+    for (int i = 0; i < longestArtist; i++) {
+        topSeparator += "-";
+        contentSeparator += "-";
+    }
+    topSeparator += "-+";
+    contentSeparator += "-+";
+
+    // Print header
+    std::cout << topSeparator << std::endl
+    << std::left
+    << "| " << std::setw(4 + 3 + longestTitle + 3 + longestArtist) << "!> Enter the corresponding number to play the song" << " |" << std::endl
+    << contentSeparator << std::endl
+    << "| " << header1 << " | " << std::setw(longestTitle) << centered(header2) << " | " << std::setw(longestArtist) << centered(header3) << " |" << std::endl
+    << contentSeparator << std::endl;
+
+    // Print all songs
+    for (int i = 0; i < allMusic.size(); i++) {
+        std::string iter = std::to_string(i + 1) + ".";
+        std::cout << std::left
+        << "| "<< std::setw(4) << iter << " | " << std::setw(longestTitle) << allMusic[i]->title << " | " << std::setw(longestArtist) << allMusic[i]->artist << " |" <<std::endl;  
+    }
+
+    std::cout << contentSeparator << std::endl
+    << "| Input: ";
+}
+
 void clearScreen() {
     try {
         system("cls");
@@ -282,3 +373,6 @@ void printConfirm() {
     getch();
     clearScreen();
 }
+
+
+

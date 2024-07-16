@@ -49,11 +49,11 @@ void MusicQueue::removeMusic(std::vector<Music*> allMusic, Music* musicToDelete)
         int index = 0;
         for (std::vector<Music*>::iterator it = allMusic.begin(); it != allMusic.end(); ++it) {
             if (musicToDelete == allMusic[index]) {
-                allMusic.erase(it);
-                queueRear = queueCurrent;
+                queueRear = queueFront;
                 queueCurrent = queueFront;
                 allMusic[index]->next = allMusic[index];
                 allMusic[index]->prev = allMusic[index];
+                allMusic.erase(it - 1);
             }
         }
     } else {
@@ -62,16 +62,43 @@ void MusicQueue::removeMusic(std::vector<Music*> allMusic, Music* musicToDelete)
             if (musicToDelete == allMusic[index]) {
                 Music* tmp;
                 if (musicToDelete == queueFront) {
+                    if (musicToDelete == queueCurrent) {
+                        if (allMusic[index]->playStatus != notPlaying) {
+                            queueCurrent->playStatus = notPlaying;
+                            mciSendStringW(L"close mp3", NULL, 0, NULL);
+                        }
+                        queueCurrent = queueCurrent->next;
+                    }
                     queueFront = queueFront->next;
-                } else if (musicToDelete == queueRear) {
-                    queueRear = queueRear->prev;
-                } else if (musicToDelete == queueCurrent) {
-                    queueCurrent = queueCurrent->next;
-                } else {
                     allMusic[index]->prev->next = allMusic[index]->next;
                     allMusic[index]->next->prev = allMusic[index]->prev;
-                    allMusic.erase(it);
+                    allMusic.erase(allMusic.begin());
+                } else if (musicToDelete == queueRear) {
+                    if (musicToDelete == queueCurrent) {
+                        if (allMusic[index]->playStatus != notPlaying) {
+                            queueCurrent->playStatus = notPlaying;
+                            mciSendStringW(L"close mp3", NULL, 0, NULL);
+                        }
+                        queueCurrent = queueCurrent->next;
+                    }
+                    queueRear = queueRear->prev;
+                    allMusic[index]->prev->next = allMusic[index]->next;
+                    allMusic[index]->next->prev = allMusic[index]->prev;
+                    allMusic.erase(allMusic.end());
+                } else {
+                    if (musicToDelete == queueCurrent) {
+                        if (allMusic[index]->playStatus != notPlaying) {
+                            queueCurrent->playStatus = notPlaying;
+                            mciSendStringW(L"close mp3", NULL, 0, NULL);
+                        }
+                        queueCurrent = queueCurrent->next;
+                    }
+                    allMusic[index]->prev->next = allMusic[index]->next;
+                    allMusic[index]->next->prev = allMusic[index]->prev;
+                    allMusic.erase(it - 1);
+                    // delete(allMusic[index]);
                 }
+                break;
             }
             index++;
         }
@@ -131,7 +158,6 @@ void MusicQueue::playOrPauseCurrentMusic() {
             std::wstring finalPath = L"open \"" + pathConverted + L"\" type mpegvideo alias mp3";
 
             mciSendStringW(finalPath.c_str(), NULL, 0, NULL);
-            DWORD_PTR instance = (DWORD_PTR)this;
             mciSendStringW(L"play mp3 notify", NULL, 0, NULL);
             queueCurrent->playStatus = playing;
         } else if(queueCurrent->playStatus == paused) {
