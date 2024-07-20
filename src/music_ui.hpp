@@ -11,7 +11,7 @@
 #include "queue.hpp"
 
 enum MenuType {
-    NowPlaying, Library, Playlist
+    NowPlayingMenu, LibraryMenu, PlaylistMenu
 };
 
 enum PageAlignment {
@@ -20,19 +20,22 @@ enum PageAlignment {
 
 class MusicPlayerUI {
     private:
-        int maxLength = 92;
+        int maxWidth = 92;
     public:
-        void showAllSong(std::vector<Music*> allMusic);
+        void setMaxWidth(int MaxWidth);
+        void printStrip();
+        void printSpace();
+        std::string printString(std::string message, PageAlignment pageAlignment);
+        std::string printString(std::string message, PageAlignment pageAlignment, int width);
+        void printNav(std::vector<std::string> nav);
+        std::string createNowPlayingList(std::string message, int width, PageAlignment pageAlignment);
+        std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, std::vector<std::string> queueList);
+        void printMainMenu(std::vector<std::string> list, MenuType menuType);
+        void ShowAllSongs(std::vector<Music*> allMusic);
+        void AddSongs(int maxWidth, std::string directory, int songFound, int songAdded, int errorCount);
 };
 
-// Maximum number of character for the interface (UI)
-extern int maxLength;
-
-std::string printUI(std::string message, int maxLength, PageAlignment pageAlignment);
-void printUI(std::vector<std::string> list, int maxLength, MenuType menuType);
-std::vector<std::string> createNowPlayingList(std::string currentlyPlayedMusic, int maxLength, std::vector<std::string> queueList);
-std::string printNowPlaying(std::string message, int maxLength, PageAlignment pageAlignment);
 void clearScreen();
-void printConfirm();
+void printConfirm(std::string menuName);
 
 #endif // From ifndef

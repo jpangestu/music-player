@@ -15,9 +15,6 @@
 
 using namespace std;
 
-// Main Menu (Library, Playlist, Now Playing) width
-int maxLength = 92;
-
 // Find all .mp3 files in a directory (and all of it's subdirectory) and store it in vector
 vector<string> findMp3(string directory) {
     vector<filesystem::path> allEntry;
@@ -58,20 +55,25 @@ string rmMultSpace(string input) {
 
 
 int main() {
-    // Define each menu list
-    vector<string> playlistMenu{"Playlists "," Choose one option below by typing the number/symbol (0,1,<,... )",
-                                 "1. Create New Playlist", "2. Show all playlist", "3. Edit Playlist",
-                                 "4. Delete Playlist"};
-
-    vector<string> musicLibraryMenu{"Music Library", " Choose one option below by typing the number/symbol (0,1,<,... )",
-                                     "1. Add song to library", "2. Show all song in the library", "3. Search Song", "4. Remove song from the library"};
-
-
     vector<Music*> allMusic; // All music in the library is stored here
-    vector<Music*> playlist[10]; // beta
+    vector<Playlist*> allPlaylist;
     vector<Music*> currentQueue; // Currently played queue (can be library or playlist)
     MusicQueue musicQueue;
     MusicPlayerUI musicPlayerUI;
+
+    // Set Main Menu maximum (Library, Playlist, Now Playing) width
+    int maxWidth = 92;
+    musicPlayerUI.setMaxWidth(maxWidth);
+
+    // Define each menu list
+    vector<string> playlistMenu{"Playlists","-----------", "1. Create New Playlist",
+                                "2. Show All Playlist", "3. Edit Playlist (Add/Remove Songs To/From Playlist)", "4. Delete Playlist"};
+
+    vector<string> musicLibraryMenu{"Music Library", "---------------", "1. Add song to library",
+                                    "2. Show all song in the library", "3. Search Song", "4. Remove song from the library"};
+
+
+    
 
     string option; // User's Input
 
@@ -79,23 +81,34 @@ int main() {
     clearScreen();
     cout << endl << endl;
     libraryMenuErr:
-    printUI(musicLibraryMenu, maxLength, Library);
+    musicPlayerUI.printMainMenu(musicLibraryMenu, LibraryMenu);
     getline(cin, option);
 
     // Add music (.mp3)
     if (option == "1") { 
         string directory;
-        int countSuccess, countError;
-        countSuccess = countError = 0;
+        int countSuccess, countError, countDuplicate;
+        countSuccess = countError = countDuplicate = 0;
         vector<string> musicPath, log;
 
         clearScreen();
-        do{
+        cout << endl << endl;
+        insertDir:
+        musicPlayerUI.printStrip();
+        cout << musicPlayerUI.printString("[!] Insert the directory of the music", Left) << endl
+        << "| Input   : "; getline(cin, directory);
+        if (filesystem::exists(directory) == false) {
             clearScreen();
-            cout << "Insert directory: "; getline(cin, directory);
-            cout << endl;
-        } while (filesystem::exists(directory) == false); // Error handling (if directory invalid)
-        
+            cout << endl << " Error: Invalid directory" << endl;
+            goto insertDir;
+        }
+
+        clearScreen();
+        cout << endl << endl;
+        musicPlayerUI.printStrip();
+        musicPlayerUI.printSpace();
+        cout << musicPlayerUI.printString("Scanning: " + directory, Left) << endl;
+
         musicPath = findMp3(directory);
 
         for (int i = 0; i < musicPath.size(); i++) {
@@ -108,9 +121,11 @@ int main() {
                     title = tags.title;
                     artist = tags.artist;
                     log.emplace_back(title + " - " + artist + "successfully added to the library");
-                    if (musicQueue.musicInLibrary(allMusic, musicPath[i]) == false) {
+                    if (musicQueue.musicInLibrary(allMusic, title, artist) == false) {
                         allMusic.emplace_back(new Music{title, artist, musicPath[i]});
                         countSuccess++;
+                    } else {
+                        countDuplicate++;
                     }
                 } else {
                     string err = mp3_id3_failure_reason();
@@ -125,32 +140,21 @@ int main() {
             }
         }
 
-        cout << endl << endl << endl;
         // Sort all music and add to music queue
         sort(allMusic.begin(), allMusic.end(), compareMusicByTitle);
         for (int i = 0; i < allMusic.size(); i++) {
             musicQueue.addMusic(allMusic[i]);
         }
         musicQueue.setQueueToCircular();
-
         currentQueue = allMusic;
+        
+        musicPlayerUI.printSpace();
+        cout << "| " << setw(4) << std::right << to_string(musicPath.size()) << setw(maxWidth - 8) << std::left << " song(s) found" << " |" << endl;
+        cout << "| " << setw(4) << std::right << to_string(countDuplicate) << setw(maxWidth - 8) << std::left << " song(s) is already in the lbrary" << " |" << endl;
+        cout << "| " << setw(4) << std::right << to_string(countSuccess) << setw(maxWidth - 8) << std::left << " song(s) added to the lbrary" << " |" << endl;
+        cout << "| " << setw(4) << std::right << to_string(countError) << setw(maxWidth - 8) << std::left << " error(s) occured during import" << " |" << endl;
 
-        cout << musicPath.size() << " song(s) found!" << endl;
-        cout << countSuccess << " song(s) successfully added to the library" << endl;
-        cout << countError << " error(s) occured during import" << endl <<endl;
-
-        getch();
-        string logOption;
-        cout << "Enter ! to view log" << endl;
-        cin >> logOption;
-
-        if (logOption == "!") {
-            for (int i = 0; i < log.size(); i++) {
-                cout << log[i] << endl << endl;
-            }
-        }
-
-        printConfirm();
+        printConfirm("Music Library Menu");
         goto libraryMenu;
     }
     // Show all music in the library
@@ -160,7 +164,15 @@ int main() {
         showMenu:
         clearScreen();
         cout << endl << endl;
-        musicPlayerUI.showAllSong(allMusic);
+
+        if (allMusic.size() == 0) {
+            cout << "There's currently no song in the library" << endl
+            << "Consider adding some first" << endl << endl;
+            printConfirm("Music Library Menu");
+            goto libraryMenu;
+        }
+        
+        musicPlayerUI.ShowAllSongs(allMusic);
         getline(cin, showOption);
 
         try {
@@ -175,7 +187,7 @@ int main() {
             }
         }
 
-        if (stoi(showOption) >= 1 and stoi(showOption) <= 15) {
+        if (stoi(showOption) >= 1 and stoi(showOption) <= allMusic.size()) {
             musicQueue.setCurrentMusic(currentQueue, allMusic[stoi(showOption) - 1]->path);
             musicQueue.playOrPauseCurrentMusic();
             goto nowPlayingMenu;
@@ -262,9 +274,10 @@ int main() {
         }
 
         if (stoi(removeOption) >= 1 and stoi(removeOption) <= 15) {
-            musicQueue.removeMusic(allMusic, matchedMusic[stoi(removeOption) - 1]);
-            getch();
-            goto nowPlayingMenu;
+            allMusic = musicQueue.removeMusic(allMusic, matchedMusic[stoi(removeOption) - 1]);
+            cout << endl << matchedMusic[stoi(removeOption)]->title << " - " << matchedMusic[stoi(removeOption)]->artist << " is successfuly removed" << endl << endl;
+            printConfirm("Music Library Menu");
+            goto libraryMenu;
         } else if (removeOption == "0") {
             exit(EXIT_SUCCESS);
         } else {
@@ -291,18 +304,30 @@ int main() {
     clearScreen();
     cout << endl << endl;
     playlistMenuErr:
-    printUI(playlistMenu, maxLength, Playlist);
+    musicPlayerUI.printMainMenu(playlistMenu, PlaylistMenu);
     getline(cin, option);
 
-    // if (option == "1") {
-
-    // } else if (option == "2") {
-
-    // } else if (option == "3") {
+    if (option == "1") {
+        string playlistName;
+        clearScreen();
+        musicPlayerUI.printStrip();
         
-    // } else if (option == "4") {
+        cout << "Insert Playlist Name: "; getline(cin, playlistName);
+        // musicPlaylist.addPlaylist(playlistName);
+        allPlaylist.emplace_back(new Playlist(playlistName));
+        printConfirm("Playlist Menu");
+        goto playlistMenu;
+    } else if (option == "2") {
+        for (int i = 0; i < allPlaylist.size(); i++) {
+            cout << i + 1 << ". " << allPlaylist[i]->name << endl;
+        }
+        printConfirm("Playlist Menu");
+        goto playlistMenu;
+    } else if (option == "3") {
         
-    // } else
+    } else if (option == "4") {
+        
+    } else
     if (option == "<") {
         goto libraryMenu;
     } else if (option == ">") {
@@ -318,8 +343,7 @@ int main() {
     clearScreen();
     cout << endl << endl;
     nowPlayingMenuErr:
-    vector<string> nowPlayingMenu = createNowPlayingList(musicQueue.getCurrentMusic(), maxLength, musicQueue.getQueueList(5));
-    printUI(nowPlayingMenu, maxLength, NowPlaying);
+    musicPlayerUI.printMainMenu(musicPlayerUI.createNowPlayingList(musicQueue.getCurrentMusic(), musicQueue.getQueueList(5)), NowPlayingMenu);
     getline(cin, option);
 
     if (option == "?") {
