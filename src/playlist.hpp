@@ -5,16 +5,24 @@
 #include <string>
 #include <algorithm>
 
+#include "queue.hpp"
+
+struct Playlist {
+    std::string name;
+    std::vector<Music*> songs;
+
+    Playlist(std::string Name);
+};
+
 class MusicPlaylist {
 private:
-    std::string name;
-    std::vector<std::string> songs;
-
+    Playlist* playlist;
 public:
-    MusicPlaylist(const std::string& name);
-    void addSong(const std::string& song);
-    void removeSong(const std::string& song);
-    std::vector<std::string> getSongs() const;
+    MusicPlaylist();
+    void addPlaylist(std::string name);
+    void addSong(Music* song);
+    void removeSong(Music* song);
+    std::vector<Music*> getSongs() const;
     std::string getName() const;
     void setName(const std::string& newName);
 };

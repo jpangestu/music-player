@@ -33,6 +33,13 @@ struct Music
     Music(std::string Title, std::string Artist, std::string Path);
 };
 
+struct Playlist {
+    std::string name;
+    std::vector<Music*> songs;
+
+    Playlist(std::string Name);
+};
+
 class MusicQueue
 {
     private:
@@ -43,7 +50,7 @@ class MusicQueue
         MusicQueue();
         void addMusic(Music* newMusic);
         std::vector<Music*> searchMusic(std::vector<Music*> queue, std::string);
-        bool musicInLibrary(std::vector<Music*> allMusic, std::string musicPath);
+        bool musicInLibrary(std::vector<Music*> allMusic, std::string title, std::string artist);
         std::vector<Music*> removeMusic(std::vector<Music*> allMusic, Music* musicToDelete);
         void playOrPauseCurrentMusic();
         void autoPlayNextMusicDetails();

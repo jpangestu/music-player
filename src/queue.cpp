@@ -1,11 +1,15 @@
 #include "queue.hpp"
 
 Music::Music(std::string Title, std::string Artist, std::string Path) {
-        title = Title;
-        artist = Artist;
-        path = Path;
-        playStatus = notPlaying;
-    }
+    title = Title;
+    artist = Artist;
+    path = Path;
+    playStatus = notPlaying;
+}
+
+Playlist::Playlist(std::string Name) {
+    name = Name;
+}
 
 MusicQueue::MusicQueue() {
         queueFront = nullptr;
@@ -109,13 +113,13 @@ std::vector<Music*> MusicQueue::removeMusic(std::vector<Music*> allMusic, Music*
 }
 
 // Return true if a music already exists in library, false otherwise
-bool MusicQueue::musicInLibrary(std::vector<Music*> allMusic, std::string musicPath) {
+bool MusicQueue::musicInLibrary(std::vector<Music*> allMusic, std::string title, std::string artist) {
     if (allMusic.size() == 0) {
         return false;
     }
 
     for (int i = 0; i < allMusic.size(); i++) {
-        if (musicPath == allMusic[i]->path) {
+        if (title == allMusic[i]->title && artist == allMusic[i]->artist) {
             return true;
         }
     }
@@ -322,5 +326,12 @@ std::string convertPath(std::string path) {
 
 // For std::sort (from <algorithm>) 3rd parameter
 bool compareMusicByTitle(const Music* a, const Music* b) {
-    return a->title < b->title;
+    std::string x = a->title, y = b->title;
+    std::transform(x.begin(), x.end(), x.begin(),
+    [](unsigned char c){ return std::tolower(c); });
+
+    std::transform(y.begin(), y.end(), y.begin(),
+    [](unsigned char c){ return std::tolower(c); });
+
+    return x < y;
 }
