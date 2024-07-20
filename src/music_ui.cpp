@@ -1,4 +1,5 @@
 #include "music_ui.hpp"
+#include "align_helper.hpp"
 
 void MusicPlayerUI::setMaxWidth(int MaxWidth) {
     maxWidth = MaxWidth;

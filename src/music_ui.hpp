@@ -9,7 +9,6 @@
 #include <iomanip>
 
 #include "queue.hpp"
-#include "align_helper.hpp"
 
 enum MenuType {
     NowPlayingMenu, LibraryMenu, PlaylistMenu
