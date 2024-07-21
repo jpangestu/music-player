@@ -16,6 +16,17 @@ void MusicPlayerUI::printStrip() {
     std::cout << std::endl;
 }
 
+void MusicPlayerUI::printStrip(int width) {
+    for (int i = 0; i < width; i++) {
+        if (i == 0 || i == width - 1) {
+            std::cout << "+";
+        } else {
+            std::cout << "-";
+        }
+    }
+    std::cout << std::endl;
+}
+
 void MusicPlayerUI::printSpace() {
     for (int i = 0; i < maxWidth - 1; i++) {
         if (i == 0 || i == maxWidth - 2) {
@@ -26,8 +37,18 @@ void MusicPlayerUI::printSpace() {
     std::cout << std::endl;
 }
 
+void MusicPlayerUI::printSpace(int width) {
+    for (int i = 0; i < width - 1; i++) {
+        if (i == 0 || i == width - 2) {
+            std::cout << "|";
+        }
+        std::cout << " ";
+    }
+    std::cout << std::endl;
+}
+
 // Return string with left & right border according to maxWidth
-std::string MusicPlayerUI::printString(std::string message, PageAlignment pageAlignment) {
+std::string MusicPlayerUI::makeString(std::string message, PageAlignment pageAlignment) {
     if (pageAlignment == Left) {
         message = "| " + message;
         size_t length = maxWidth - message.length();
@@ -63,7 +84,7 @@ std::string MusicPlayerUI::printString(std::string message, PageAlignment pageAl
 }
 
 // Return string with left & right border according to a custom width
-std::string MusicPlayerUI::printString(std::string message, PageAlignment pageAlignment, int width) {
+std::string MusicPlayerUI::makeString(std::string message, PageAlignment pageAlignment, int width) {
     if (pageAlignment == Left) {
         message = "| " + message;
         size_t length = width - message.length();
@@ -192,10 +213,10 @@ std::vector<std::string> MusicPlayerUI::createNowPlayingList(std::string current
         if (i == 1) {
             str += createNowPlayingList("Queue", quemaxWidth, Middle);
         } else if (i == 2) {
-            str = " " + printString("Now Playing", Middle, npmaxWidth);
+            str = " " + makeString("Now Playing", Middle, npmaxWidth);
             str += createNowPlayingList(queueList[0], quemaxWidth, Left);
         } else if (i == 3) {
-            str = " " + printString("-------------", Middle, npmaxWidth);
+            str = " " + makeString("-------------", Middle, npmaxWidth);
             str += createNowPlayingList(queueList[1], quemaxWidth, Left);
         } else if (i == 4) {
             for (int a = 0; a < quemaxWidth; a++) {
@@ -209,7 +230,7 @@ std::vector<std::string> MusicPlayerUI::createNowPlayingList(std::string current
                 }
                 currentlyPlayedMusic = tmp;
             }
-            str = " " + printString(" " + currentlyPlayedMusic, Middle, npmaxWidth);
+            str = " " + makeString(" " + currentlyPlayedMusic, Middle, npmaxWidth);
             str += createNowPlayingList(queueList[2], quemaxWidth, Left);
         } else if (i == 6) {
             for (int a = 0; a < quemaxWidth; a++) {
@@ -230,10 +251,87 @@ std::vector<std::string> MusicPlayerUI::createNowPlayingList(std::string current
     return nowPlayingMenu;
 }
 
-void MusicPlayerUI::printNav(std::vector<std::string> nav) {
-    for (int i = 0; i < nav.size(); i ++) {
-
+std::string MusicPlayerUI::combineStrip(std::string strip1, std::string strip2) {
+    std::string combinedStrip;
+    if (strip1.length() < strip2.length()) {
+        for (int i = 0; i < strip1.length(); i++) {
+            combinedStrip += (strip1[i] == '+' || strip2[i] == '+') ? "+" : "-";
+        }
+    } else {
+        for (int i = 0; i < strip1.length(); i++) {
+            combinedStrip += (strip1[i] == '+' || strip2[i] == '+') ? "+" : "-";
+        }
     }
+    return combinedStrip;
+}
+
+// Create Navigation Menu
+std::vector<std::string> MusicPlayerUI::makeSubMenuNav(std::vector<std::string> nav, int width) {
+    std::vector<std::string> SubMenuNav;
+    std::string subMenuNav, subMenuNavStrip, nav0strip, nav1strip, nav2strip;
+
+    for (int i = 0; i < nav[0].length(); i++) {
+        nav0strip += (i == 0 || i == nav[0].length() - 1) ? "+" : "-";
+    }
+
+    for (int i = 0; i < nav[1].length(); i++) {
+        nav1strip += (i == 0 || i == nav[1].length() - 1) ? "+" : "-";
+    }
+
+    if (nav.size() == 3) {
+        for (int i = 0; i < nav[2].length(); i++) {
+            nav2strip += (i == 0 || i == nav[2].length() - 1) ? "+" : "-";
+        }}
+    
+
+    if (nav.size() == 2) {
+        int i = 0;
+        while (i < width) {
+            if (i == 0) {
+                subMenuNav += nav[0];
+                subMenuNavStrip += nav0strip;
+                i += nav[0].length();
+            } else if (i == width - nav[1].length()) {
+                subMenuNav += nav[1];
+                subMenuNavStrip += nav1strip;
+                i += nav[1].length();
+            } else {
+                subMenuNav += " ";
+                subMenuNavStrip += "-";
+                i++;
+            }
+        }
+
+        SubMenuNav.emplace_back(subMenuNavStrip);
+        SubMenuNav.emplace_back(subMenuNav);
+        SubMenuNav.emplace_back(subMenuNavStrip);
+    } else if (nav.size() == 3) {
+        int i = 0;
+        while (i < width) {
+            if (i == 0) {
+                subMenuNav += nav[0];
+                subMenuNavStrip += nav0strip;
+                i += nav[0].length();
+            } else if (i == width - nav[2].length()) {
+                subMenuNav += nav[2];
+                subMenuNavStrip += nav2strip;
+                i += nav[2].length();
+            } else if (i == (width / 2 - nav[1].length() / 2)) {
+                subMenuNav += nav[1];
+                subMenuNavStrip += nav1strip;
+                i += nav[1].length();
+            } else {
+                subMenuNav += " ";
+                subMenuNavStrip += "-";
+                i++;
+            }
+        }
+
+        SubMenuNav.emplace_back(subMenuNavStrip);
+        SubMenuNav.emplace_back(subMenuNav);
+        SubMenuNav.emplace_back(subMenuNavStrip);
+    }
+    return SubMenuNav;
 }
 
 // Print out Menu (Interface/UI) to console
@@ -325,9 +423,9 @@ void MusicPlayerUI::printMainMenu(std::vector<std::string> list, MenuType menuTy
     } else {
         for (int i = 0; i < list.size(); i++) {
             if ( i == 0 || i == 1) {
-            std::cout << printString(list[i], Middle) << std::endl;
+            std::cout << makeString(list[i], Middle) << std::endl;
             } else {
-                std::cout << printString(list[i], Left) << std::endl;
+                std::cout << makeString(list[i], Left) << std::endl;
             }
         }
         std::cout << blankLine << std::endl;
@@ -336,11 +434,13 @@ void MusicPlayerUI::printMainMenu(std::vector<std::string> list, MenuType menuTy
     std::cout << "| Input: ";
 }
 
-void MusicPlayerUI::ShowAllSongs(std::vector<Music*> allMusic) {
+// Return the last strip (separator) and the width of the contents
+std::vector<std::string> MusicPlayerUI::ShowAllSongs(std::vector<Music*> allMusic) {
+    std::vector<std::string> stripAndWidth;
     // Find longest title length
     int longestTitle = 0, longestArtist = 0, width = 0; // longest content length;
     std::string header1 = "No.", header2 = "Title", header3 = "Artist";
-    std::string contentSeparator, topMenuSeparator;
+    std::string contentSeparator;
 
     //Find longest title
     for (int i = 0; i < allMusic.size(); i++) {
@@ -356,34 +456,21 @@ void MusicPlayerUI::ShowAllSongs(std::vector<Music*> allMusic) {
         }
     }
 
-    contentSeparator = topMenuSeparator = "+-";
+    contentSeparator = "+-";
     contentSeparator += "-----+-";
-    topMenuSeparator += "-----+-";
     for (int i = 0; i < longestTitle; i++) {
         contentSeparator += "-";
-        if (i == 0 || i == 17) {
-            topMenuSeparator += "+";
-        } else {
-            topMenuSeparator += "-";
-        }
     }
     contentSeparator += "-+-";
-    topMenuSeparator += "-+-";
     for (int i = 0; i < longestArtist; i++) {
         contentSeparator += "-";
-        if (i == longestArtist - 9 ) {
-            topMenuSeparator += "+";
-        } else {
-            topMenuSeparator += "-";
-        }
     }
     contentSeparator += "-+";
-    topMenuSeparator += "-+";
 
     width = 2 + header1.length() + 1 + 3 + longestTitle + 3 + longestArtist + 2;
 
     // Print header
-    std:: cout << contentSeparator << std::endl
+    std::cout << contentSeparator << std::endl
     << std::setfill(' ')  << "| " << std::setw(4) << righted(header1) << " | " << std::setw(longestTitle) << centered(header2) << " | " << std::setw(longestArtist) << centered(header3) << " |" << std::endl
     << contentSeparator << std::endl;
 
@@ -394,17 +481,9 @@ void MusicPlayerUI::ShowAllSongs(std::vector<Music*> allMusic) {
         std::cout << "| "<< std::setw(4) << righted(iter) << " | " << std::setw(longestTitle) << lefted(title) << " | " << std::setw(longestArtist) << lefted(artist) << " |" <<std::endl;  
     }
 
-    std::cout << topMenuSeparator << std::endl;
-    std::cout << "| < Back |";
-    std::cout << std::setfill(' ') << std::setw(width - 10 - 11) << centered("| ? Search Again |");
-    std::cout << "| 0. Exit |" << std::endl;
-
-    // Second line
-    std::cout << "+--------+";
-    std::cout << std::setfill('-') << std::setw(width - 10 - 11) << centered("+----------------+");
-    std::cout << "+---------+" << std::endl;
-    std::cout << std::setfill(' ') << "| " << std::setw(4 + 3 + longestTitle + 3 + longestArtist) << lefted("[!] Enter the corresponding number to play the song") << " |" << std::endl
-    << "| Input: ";
+    stripAndWidth.emplace_back(contentSeparator);
+    stripAndWidth.emplace_back(std::to_string(width));
+    return stripAndWidth;
 }
 
 void MusicPlayerUI::AddSongs(int maxWidth, std::string directory, int songFound, int songAdded, int errorCount) {
