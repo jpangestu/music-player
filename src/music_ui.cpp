@@ -87,7 +87,7 @@ std::string MusicPlayerUI::makeString(std::string message, PageAlignment pageAli
 std::string MusicPlayerUI::makeString(std::string message, PageAlignment pageAlignment, int width) {
     if (pageAlignment == Left) {
         message = "| " + message;
-        size_t length = maxLength - message.length();
+        size_t length = width - message.length();
         for (size_t i = 1; i < length; i++) {
             message += " ";
             if (i == length - 1) {
@@ -97,7 +97,7 @@ std::string MusicPlayerUI::makeString(std::string message, PageAlignment pageAli
         return message;
     } else {
         std::string str;
-        size_t length = floor(maxLength/2 - message.length()/2);
+        size_t length = floor(width/2 - message.length()/2);
         for (size_t i = 1; i < length; i++) {
             if (i == 1) {
                 str += "|";
@@ -108,7 +108,7 @@ std::string MusicPlayerUI::makeString(std::string message, PageAlignment pageAli
 
         str += message;
 
-        length = maxLength - str.length();
+        length = width - str.length();
         for (size_t i = 1; i < length; i++) {
             str += " ";
             if (i == length - 1) {
@@ -335,12 +335,12 @@ std::vector<std::string> MusicPlayerUI::makeSubMenuNav(std::vector<std::string> 
 }
 
 // Print out Menu (Interface/UI) to console
-void printUI(std::vector<std::string> list, int maxLength, MenuType menuType) {
+void MusicPlayerUI::printMainMenu(std::vector<std::string> list, MenuType menuType) {
     std::string upperStrip, blankLine, lowerStrip, lowerOption;
     upperStrip = blankLine = lowerStrip = lowerOption = "";
 
-    for (int i = 0; i < maxLength; i++) {
-        if (i == 0 || i == maxLength - 1) {
+    for (int i = 0; i < maxWidth; i++) {
+        if (i == 0 || i == maxWidth - 1) {
             upperStrip += "+";
             blankLine += "|";
         } else {
@@ -350,14 +350,14 @@ void printUI(std::vector<std::string> list, int maxLength, MenuType menuType) {
 
     }
     
-    for (int i = 0; i < maxLength; i++) {
-        if (i == 0 || i == maxLength - 1) {
+    for (int i = 0; i < maxWidth; i++) {
+        if (i == 0 || i == maxWidth - 1) {
             lowerOption += "|";
             lowerStrip += "+";
             continue;
         }
         
-        if (i == maxLength - 11) {
+        if (i == maxWidth - 11) {
             lowerOption += "| 0. Exit ";
             i += 9; // 9 is the number of character of "| 0. Exit " minus 1
             lowerStrip += "+";
@@ -368,7 +368,7 @@ void printUI(std::vector<std::string> list, int maxLength, MenuType menuType) {
         }
 
         // Print lower border option based on position (type of menu)
-        if (menuType == NowPlaying) {
+        if (menuType == NowPlayingMenu) {
             if (i == 2) {
                 lowerOption += "< Playlist | Library > |";
                 i += 24;
@@ -381,7 +381,7 @@ void printUI(std::vector<std::string> list, int maxLength, MenuType menuType) {
                     }
                 }
             }
-        } else if (menuType == Library) {
+        } else if (menuType == LibraryMenu) {
             if (i == 2) {
                 lowerOption += "< Now Playing | Playlist > |";
                 i += 28;
@@ -416,7 +416,7 @@ void printUI(std::vector<std::string> list, int maxLength, MenuType menuType) {
     std::cout << upperStrip << std::endl;
 
     // Print menu (the content)
-    if (menuType == NowPlaying) {
+    if (menuType == NowPlayingMenu) {
         for (int i = 0; i < list.size(); i++) {
             std::cout << "|" << list[i] << "|" << std::endl;
         }
@@ -459,16 +459,12 @@ std::vector<std::string> MusicPlayerUI::ShowAllSongs(std::vector<Music*> allMusi
     contentSeparator = "+-";
     contentSeparator += "-----+-";
     for (int i = 0; i < longestTitle; i++) {
-        topSeparator += "-";
         contentSeparator += "-";
     }
-    topSeparator += "---";
     contentSeparator += "-+-";
     for (int i = 0; i < longestArtist; i++) {
-        topSeparator += "-";
         contentSeparator += "-";
     }
-    topSeparator += "-+";
     contentSeparator += "-+";
 
     width = 2 + header1.length() + 1 + 3 + longestTitle + 3 + longestArtist + 2;
@@ -490,6 +486,10 @@ std::vector<std::string> MusicPlayerUI::ShowAllSongs(std::vector<Music*> allMusi
     return stripAndWidth;
 }
 
+void MusicPlayerUI::AddSongs(int maxWidth, std::string directory, int songFound, int songAdded, int errorCount) {
+
+}
+
 void clearScreen() {
     try {
         system("cls");
@@ -498,11 +498,10 @@ void clearScreen() {
     }
 }
 
-void printConfirm() {
-    std::cout << "Press any key to go back to the Main Menu" << std::endl;
+void printConfirm(std:: string menuName) {
+    std::cout << "Press any key to go back to the " << menuName << std::endl;
     getch();
     clearScreen();
 }
-
 
 

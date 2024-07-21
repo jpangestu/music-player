@@ -11,6 +11,7 @@
 #include <cmath> // floor
 #include <random>
 #include <future>
+#include <codecvt>
 
 // Playback Status
 enum PlayStatus {
@@ -32,6 +33,13 @@ struct Music
     Music(std::string Title, std::string Artist, std::string Path);
 };
 
+struct Playlist {
+    std::string name;
+    std::vector<Music*> songs;
+
+    Playlist(std::string Name);
+};
+
 class MusicQueue
 {
     private:
@@ -42,8 +50,8 @@ class MusicQueue
         MusicQueue();
         void addMusic(Music* newMusic);
         std::vector<Music*> searchMusic(std::vector<Music*> queue, std::string);
-        bool musicInLibrary(std::vector<Music*> allMusic, std::string musicPath);
-        void removeMusic(std::vector<Music*> allMusic, Music* musicToDelete);
+        bool musicInLibrary(std::vector<Music*> allMusic, std::string title, std::string artist);
+        std::vector<Music*> removeMusic(std::vector<Music*> allMusic, Music* musicToDelete);
         void playOrPauseCurrentMusic();
         void autoPlayNextMusicDetails();
         void autoPlayNextMusic();

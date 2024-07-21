@@ -11,7 +11,7 @@
 #include "queue.hpp"
 
 enum MenuType {
-    NowPlaying, Library, Playlist
+    NowPlayingMenu, LibraryMenu, PlaylistMenu
 };
 
 enum PageAlignment {
@@ -20,7 +20,7 @@ enum PageAlignment {
 
 class MusicPlayerUI {
     private:
-        int maxLength = 92;
+        int maxWidth = 92;
     public:
         void setMaxWidth(int MaxWidth);
         void printStrip();
@@ -39,6 +39,6 @@ class MusicPlayerUI {
 };
 
 void clearScreen();
-void printConfirm();
+void printConfirm(std::string menuName);
 
 #endif // From ifndef
