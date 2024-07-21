@@ -84,7 +84,7 @@ int main() {
     musicPlayerUI.printMainMenu(musicLibraryMenu, LibraryMenu);
     getline(cin, option);
 
-    // Add music (.mp3)
+    // Add song (.mp3)
     if (option == "1") { 
         string directory;
         int countSuccess, countError, countDuplicate;
@@ -163,9 +163,7 @@ int main() {
         }
         cout << musicPlayerUI.makeString("[!] Press Enter or < to return to Music Library Menu", Left) << endl;
         cout << "| Input: "; getline(cin, option);
-        if (option == "<") {
-            goto libraryMenu;
-        } else if (option == "") {
+        if (option == "" || option == "<") {
             goto libraryMenu;
         } else if (option == "?") {
             clearScreen();
@@ -182,7 +180,7 @@ int main() {
         }
         goto libraryMenu;
     }
-    // Show all music in the library
+    // Show all songs in the library
     else if (option == "2") {
         string showOption;
 
@@ -229,7 +227,7 @@ int main() {
             goto showMenu;
         }
     }
-    // Search music
+    // Search song
     else if (option == "3") {
         string title;
         int localWidth = maxWidth;
@@ -246,11 +244,11 @@ int main() {
         searchResult:
         clearScreen();
         cout << endl << endl;
-        vector<Music*> matchedMusic2 = musicQueue.searchMusic(allMusic, title);
-        if (matchedMusic2.size() != 0) {
+        vector<Music*> matchedMusic = musicQueue.searchMusic(allMusic, title);
+        if (matchedMusic.size() != 0) {
             clearScreen();
             cout << endl << endl;
-            vector<string> stripAndWidth = musicPlayerUI.ShowAllSongs(matchedMusic2);
+            vector<string> stripAndWidth = musicPlayerUI.ShowAllSongs(matchedMusic);
             localWidth = stoi(stripAndWidth[1]);
             vector<string> nav = {"| < Back |", "| ? Search Again |", "| 0. Exit |"};
             nav = musicPlayerUI.makeSubMenuNav(nav, localWidth);
@@ -279,8 +277,8 @@ int main() {
             }
         }
 
-        if (stoi(option) >= 1 and stoi(option) <= 15) {
-            musicQueue.setCurrentMusic(currentQueue, matchedMusic2[stoi(option) - 1]->path);
+        if (stoi(option) >= 1 and stoi(option) <= matchedMusic.size()) {
+            musicQueue.setCurrentMusic(currentQueue, matchedMusic[stoi(option) - 1]->path);
             musicQueue.playOrPauseCurrentMusic();
             goto nowPlayingMenu;
         } else if (option == "0") {
@@ -289,7 +287,7 @@ int main() {
             goto searchResult;
         }
     }
-    // Remove music from the library 
+    // Remove song from the library 
     else if (option == "4") {
         string title;
         int localWidth = maxWidth;
@@ -373,28 +371,199 @@ int main() {
     musicPlayerUI.printMainMenu(playlistMenu, PlaylistMenu);
     getline(cin, option);
 
-    if (option == "1") {
+    // Add playlist
+    if (option == "1")
+    {
         string playlistName;
         clearScreen();
+        cout << endl << endl;
         musicPlayerUI.printStrip();
-        
-        cout << "Insert Playlist Name: "; getline(cin, playlistName);
-        // musicPlaylist.addPlaylist(playlistName);
+        cout << "| Insert Playlist Name: "; getline(cin, playlistName);
         allPlaylist.emplace_back(new Playlist(playlistName));
-        printConfirm("Playlist Menu");
-        goto playlistMenu;
-    } else if (option == "2") {
+        playlistCreated:
+        clearScreen();
+        cout << endl;
+        cout << "[Success] Playlist sucessfully created" << endl;
+        musicPlayerUI.printStrip();
+        cout << musicPlayerUI.makeString("| Insert Playlist Name: " + playlistName, Left) << endl;
+        vector<string> nav = {"| < Back |", "| 0. Exit |"};
+        nav = musicPlayerUI.makeSubMenuNav(nav, maxWidth);
+        cout << nav[0] << endl;
+        cout << nav[1] << endl;
+        cout << nav[2] << endl;
+        cout << musicPlayerUI.makeString("[!] Press Enter or < to return to Playlist Menu", Left) << endl;
+        cout << "| Input: "; getline(cin, option);
+
+        if (option == "" || option == "<") {
+            goto playlistMenu;
+        } else if (option == "0") {
+            exit(EXIT_SUCCESS);
+        } else {
+            goto playlistCreated;
+        }
+    }
+    // Show all playlist
+    else if (option == "2")
+    {
         for (int i = 0; i < allPlaylist.size(); i++) {
             cout << i + 1 << ". " << allPlaylist[i]->name << endl;
         }
         printConfirm("Playlist Menu");
         goto playlistMenu;
-    } else if (option == "3") {
+    }
+    // Edit playlist
+    else if (option == "3")
+    {
+        editPlaylistMenu:
+        clearScreen();
+        cout << endl << endl;
+        musicPlayerUI.printStrip();
+        for (int i = 0; i < allPlaylist.size(); i++) {
+            cout << musicPlayerUI.makeString(to_string(i + 1) + ". " + allPlaylist[i]->name, Left) << endl;
+        }
+        vector<string> nav = {"| < Back |", "| 0. Exit |"};
+        nav = musicPlayerUI.makeSubMenuNav(nav, maxWidth);
+        cout << nav[0] << endl;
+        cout << nav[1] << endl;
+        cout << nav[2] << endl;
+        cout << musicPlayerUI.makeString("[!] Enter the corresponding playlist you want to edit", Left) << endl;
+        cout << "| Input: "; getline(cin, option);
+
+        try {
+            stoi(option);
+        } catch (invalid_argument) {
+            if (option == "<") {
+            goto playlistMenu;
+            } else {
+                goto editPlaylistMenu;
+            }
+        }
+
+        // Playlist selected
+        if (stoi(option) >= 1 and stoi(option) <= allPlaylist.size()) {
+            clearScreen();
+            cout << endl << endl;
+            musicPlayerUI.printStrip();
+            cout << musicPlayerUI.makeString("Curently Editing: " + allPlaylist[stoi(option) - 1]->name, Middle);
+            cout << musicPlayerUI.makeString("1. Add Song", Left) << endl;
+            cout << musicPlayerUI.makeString("2. Remove Song", Left) << endl;
+            musicPlayerUI.printSpace();
+            nav = {"| < Back |", "| 0. Exit |"};
+            nav = musicPlayerUI.makeSubMenuNav(nav, maxWidth);
+            cout << nav[0] << endl;
+            cout << nav[1] << endl;
+            cout << nav[2] << endl;
+            cout << "| Input: "; getline(cin, option);
+
+            if (option == "<") {
+                goto editPlaylistMenu;
+            } else if (option == "1") {
+                string title2 = "";
+                int localWidth2 = maxWidth;
+
+                searchOption2:
+                clearScreen();
+                cout << endl << endl;
+                searchOption2Err:
+                musicPlayerUI.printStrip();
+                cout << "| Search title: "; getline(cin, title2);
+
+                title2 = rmMultSpace(title2);
+
+                searchResult2:
+                clearScreen();
+                cout << endl << endl;
+                vector<Music*> matchedMusic = musicQueue.searchMusic(allMusic, title2);
+                if (matchedMusic.size() != 0) {
+                    clearScreen();
+                    cout << endl << endl;
+                    vector<string> stripAndWidth = musicPlayerUI.ShowAllSongs(matchedMusic);
+                    localWidth2 = stoi(stripAndWidth[1]);
+                    nav = {"| < Back |", "| ? Search Again |", "| 0. Exit |"};
+                    nav = musicPlayerUI.makeSubMenuNav(nav, localWidth2);
+                    nav[0] = musicPlayerUI.combineStrip(stripAndWidth[0], nav[0]);
+                    cout << nav[0] << endl;
+                    cout << nav[1] << endl;
+                    cout << nav[2] << endl;
+                } else {
+                    clearScreen();
+                    cout << endl;
+                    cout << "  [Result] There are no songs that match the title provided" << endl;
+                    goto searchOption2Err;
+                }
+                cout << musicPlayerUI.makeString("[!] Enter the corresponding number to play the song", Left, localWidth2) << endl;
+                cout << "| Input: "; getline(cin, option);
+
+                try {
+                    stoi(option);
+                } catch (invalid_argument) {
+                    if (option == "?") {
+                        goto searchOption2;
+                    } else if (option == "<") {
+                        goto libraryMenu;
+                    } else {
+                        goto searchResult2;
+                    }
+                }
+
+                if (stoi(option) >= 1 and stoi(option) <= matchedMusic.size()) {
+                    musicQueue.setCurrentMusic(currentQueue, matchedMusic[stoi(option) - 1]->path);
+                    musicQueue.playOrPauseCurrentMusic();
+                    goto nowPlayingMenu;
+                } else if (option == "0") {
+                    exit(EXIT_SUCCESS);
+                } else {
+                    goto searchResult2;
+                }
+            }
+            else if (option == "2") {
+                removeFromPlaylist:
+                clearScreen();
+                cout << endl << endl;
+                musicPlayerUI.printStrip();
+                for (int i = 0; i < allPlaylist[stoi(option)]->songs.size(); i++) {
+                    cout << musicPlayerUI.makeString(to_string(i + 1) + ". " + allPlaylist[stoi(option)]->songs[i]->title + " - " + allPlaylist[stoi(option)]->songs[i]->artist, Left) << endl;
+                }
+                nav = {"| < Back |", "| 0. Exit |"};
+                nav = musicPlayerUI.makeSubMenuNav(nav, maxWidth);
+                cout << nav[0] << endl;
+                cout << nav[1] << endl;
+                cout << nav[2] << endl;
+                cout << musicPlayerUI.makeString("[!] Enter the corresponding song to add to the playlist", Left) << endl;
+                cout << "| Input: "; getline(cin, option);
+
+                try {
+                    stoi(option);
+                } catch (invalid_argument) {
+                    if (option == "<") {
+                        goto libraryMenu;
+                    } else {
+                        goto removeFromPlaylist;
+                    }
+                }
+
+                if (stoi(option) >= 1 and stoi(option) <= allPlaylist.size()) {
+                    goto playlistMenu;
+                } else if (option == "0") {
+                    exit(EXIT_SUCCESS);
+                } else {
+                    goto removeFromPlaylist;
+                }
+                
+            }
+            goto nowPlayingMenu;
+        } else if (option == "0") {
+            exit(EXIT_SUCCESS);
+        } else {
+            goto editPlaylistMenu;
+        } 
+    }
+    // Delete playlist
+    else if (option == "4")
+    {
         
-    } else if (option == "4") {
-        
-    } else
-    if (option == "<") {
+    }
+    else if (option == "<") {
         goto libraryMenu;
     } else if (option == ">") {
         goto nowPlayingMenu;
