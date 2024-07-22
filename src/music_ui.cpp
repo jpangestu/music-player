@@ -270,18 +270,18 @@ std::vector<std::string> MusicPlayerUI::makeSubMenuNav(std::vector<std::string> 
     std::vector<std::string> SubMenuNav;
     std::string subMenuNav, subMenuNavStrip, nav0strip, nav1strip, nav2strip;
 
+    // Set strip for each nav menu name. Example: for menu | < Back | then the strip is +---------+
     for (int i = 0; i < nav[0].length(); i++) {
         nav0strip += (i == 0 || i == nav[0].length() - 1) ? "+" : "-";
     }
-
     for (int i = 0; i < nav[1].length(); i++) {
         nav1strip += (i == 0 || i == nav[1].length() - 1) ? "+" : "-";
     }
-
     if (nav.size() == 3) {
         for (int i = 0; i < nav[2].length(); i++) {
             nav2strip += (i == 0 || i == nav[2].length() - 1) ? "+" : "-";
-        }}
+        }
+    }
     
 
     if (nav.size() == 2) {
@@ -316,7 +316,7 @@ std::vector<std::string> MusicPlayerUI::makeSubMenuNav(std::vector<std::string> 
                 subMenuNav += nav[2];
                 subMenuNavStrip += nav2strip;
                 i += nav[2].length();
-            } else if (i == (width / 2 - nav[1].length() / 2)) {
+            } else if (i == (floor(width / 2) - floor(nav[1].length() / 2))) {
                 subMenuNav += nav[1];
                 subMenuNavStrip += nav1strip;
                 i += nav[1].length();
@@ -438,23 +438,31 @@ void MusicPlayerUI::printMainMenu(std::vector<std::string> list, MenuType menuTy
 std::vector<std::string> MusicPlayerUI::ShowAllSongs(std::vector<Music*> allMusic) {
     std::vector<std::string> stripAndWidth;
     // Find longest title length
-    int longestTitle = 0, longestArtist = 0, width = 0; // longest content length;
+    int longestTitle = 31, longestArtist = 31, width = 0; // longest content length;
     std::string header1 = "No.", header2 = "Title", header3 = "Artist";
     std::string contentSeparator;
 
-    //Find longest title
-    for (int i = 0; i < allMusic.size(); i++) {
-        if (longestTitle < allMusic[i]->title.length()) {
-            longestTitle = allMusic[i]->title.length();
-        }
-    }
+    // //Find longest title
+    // for (int i = 0; i < allMusic.size(); i++) {
+    //     if (longestTitle < allMusic[i]->title.length()) {
+    //         longestTitle = allMusic[i]->title.length();
+    //     }
+    // }
 
-    // Find longest artist length
-    for (int i = 0; i < allMusic.size(); i++) {
-        if (longestArtist < allMusic[i]->artist.length()) {
-            longestArtist = allMusic[i]->artist.length();
-        }
-    }
+    // // Find longest artist length
+    // for (int i = 0; i < allMusic.size(); i++) {
+    //     if (longestArtist < allMusic[i]->artist.length()) {
+    //         longestArtist = allMusic[i]->artist.length();
+    //     }
+    // }
+
+    // // Make sure longest title and artist length is not less than nav menu
+    // if (longestTitle < 20) {
+    //     longestTitle = 20;
+    // }
+    // if (longestArtist < 20) {
+    //     longestArtist = 20;
+    // }
 
     contentSeparator = "+-";
     contentSeparator += "-----+-";

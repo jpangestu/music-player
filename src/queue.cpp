@@ -77,7 +77,6 @@ std::vector<Music*> MusicQueue::removeMusic(std::vector<Music*> allMusic, Music*
                     allMusic[index]->prev->next = allMusic[index]->next;
                     allMusic[index]->next->prev = allMusic[index]->prev;
                     allMusic.erase(allMusic.begin());
-                    delete(allMusic[index]);
                 } else if (musicToDelete == queueRear) {
                     if (musicToDelete == queueCurrent) {
                         if (allMusic[index]->playStatus != notPlaying) {
@@ -90,7 +89,6 @@ std::vector<Music*> MusicQueue::removeMusic(std::vector<Music*> allMusic, Music*
                     allMusic[index]->prev->next = allMusic[index]->next;
                     allMusic[index]->next->prev = allMusic[index]->prev;
                     allMusic.erase(allMusic.end());
-                    delete(allMusic[index]);
                 } else {
                     if (musicToDelete == queueCurrent) {
                         if (allMusic[index]->playStatus != notPlaying) {
@@ -102,7 +100,6 @@ std::vector<Music*> MusicQueue::removeMusic(std::vector<Music*> allMusic, Music*
                     allMusic[index]->prev->next = allMusic[index]->next;
                     allMusic[index]->next->prev = allMusic[index]->prev;
                     allMusic.erase(it);
-                    delete(allMusic[index]);
                 }
                 break;
             }
