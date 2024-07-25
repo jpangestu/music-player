@@ -691,7 +691,7 @@ int main() {
                     allPlaylist[stoi(allPlaylistIndex) - 1]->songs = musicQueue.removeMusic(allPlaylist[stoi(allPlaylistIndex) - 1]->songs, allPlaylist[stoi(allPlaylistIndex) - 1]->songs[stoi(songsIndex) - 1]);
                     clearScreen();
                     cout << endl;
-                    cout << "  [Success] The selected song has been removed from the playlist" << endl << endl;
+                    cout << "  [Success] The selected song has been removed from the playlist" << endl;
                     goto removeFromPlaylist;
                 } else if (songsIndex == "0") {
                     exit(EXIT_SUCCESS);
@@ -720,11 +720,9 @@ int main() {
         deletePlaylist:
         
         if (allPlaylist.size() == 0) {
-            clearScreen(); cout << endl << endl;
             musicPlayerUI.printStrip();
             cout << musicPlayerUI.makeString("Playlist is empty. Nothing to delete.", Middle) << endl;
         } else {
-            clearScreen(); cout << endl << endl;
             musicPlayerUI.printStrip();
             for (int i = 0; i < allPlaylist.size(); i++) {
                 cout << musicPlayerUI.makeString(to_string(i + 1) + ". " + allPlaylist[i]->name, Left) << endl;
@@ -767,7 +765,7 @@ int main() {
             }
             
             clearScreen(); cout << endl;
-            cout << musicPlayerUI.makeString("  [Success] Selected playlist has been deleted", Left) << endl;
+            cout << "  [Success] Selected playlist has been deleted" << endl;
             goto deletePlaylist;
         } else if (option == "0") {
             exit(EXIT_SUCCESS);
@@ -788,7 +786,6 @@ int main() {
 
 
     nowPlayingMenu:
-    musicQueue.sort(currentQueue);
     clearScreen();
     cout << endl << endl;
     nowPlayingMenuErr:
