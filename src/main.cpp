@@ -66,10 +66,10 @@ int main() {
 
     // Define each menu list
     vector<string> playlistMenu{"Playlists","-----------", "1. Create New Playlist",
-                                "2. Show All Playlist", "3. Edit Playlist (Add/Remove Songs To/From Playlist)", "4. Delete Playlist"};
+                                "2. Show All Playlist", "3. Edit Playlist (Add/Remove Songs to/from Playlist)", "4. Delete Playlist"};
 
-    vector<string> musicLibraryMenu{"Music Library", "---------------", "1. Add song to library",
-                                    "2. Show all song in the library", "3. Search Song", "4. Remove song from the library"};
+    vector<string> musicLibraryMenu{"Music Library", "---------------", "1. Add Song to Library",
+                                    "2. Show All Song in Library", "3. Search Song in Library", "4. Remove Song from Library"};
 
     string option; // User's Input
 
@@ -311,13 +311,11 @@ int main() {
 
         title = rmMultSpace(title);
 
-        removeResult:
         clearScreen();
         cout << endl << endl;
+        removeResult:
         vector<Music*> matchedMusic = musicQueue.searchMusic(allMusic, title);
         if (matchedMusic.size() != 0) {
-            clearScreen();
-            cout << endl << endl;
             vector<string> stripAndWidth = musicPlayerUI.ShowAllSongs(matchedMusic);
             localWidth = stoi(stripAndWidth[1]);
             vector<string> nav = {"| < Back |", "| ? Search Again |", "| 0. Exit |"};
@@ -343,18 +341,22 @@ int main() {
             } else if (option == "<") {
                 goto libraryMenu;
             } else {
+                clearScreen();
+                cout << endl << endl;
                 goto removeResult;
             }
         }
 
         if (stoi(option) >= 1 and stoi(option)  <= matchedMusic.size()) {
             allMusic = musicQueue.removeMusic(allMusic, matchedMusic[stoi(option) - 1]);
-            cout << endl << matchedMusic[stoi(option)]->title << " - " << matchedMusic[stoi(option)]->artist << " is successfuly removed from the library" << endl << endl;
-            printConfirm("Music Library Menu");
-            goto libraryMenu;
+            clearScreen(); cout << endl;
+            cout << "  [Success] The selected song is has been removed from the library" << endl;
+            goto removeResult;
         } else if (option == "0") {
             exit(EXIT_SUCCESS);
         } else {
+            clearScreen();
+            cout << endl << endl;
             goto removeResult;
         }
     }
@@ -366,10 +368,7 @@ int main() {
     }
     else if (option == "0") {
         exit(EXIT_SUCCESS);
-    } else if (option == "test") {
-        getch();
-    }
-    else {
+    } else {
         goto libraryMenu;
     }
 
@@ -392,7 +391,7 @@ int main() {
         playlistCreated:
         clearScreen();
         cout << endl;
-        cout << "[Success] Playlist created successfully" << endl;
+        cout << "  [Success] Playlist created successfully" << endl;
         musicPlayerUI.printStrip();
         cout << musicPlayerUI.makeString("Insert Playlist Name: " + playlistName, Left) << endl;
         musicPlayerUI.printSpace();
@@ -648,9 +647,9 @@ int main() {
             // Edit playlist -> Remove song
             else if (option == "2") {
                 string songsIndex;
-                removeFromPlaylist:
                 clearScreen();
                 cout << endl << endl;
+                removeFromPlaylist:
                 if (allPlaylist[stoi(allPlaylistIndex) - 1]->songs.size() == 0) {
                     musicPlayerUI.printStrip();
                     cout << musicPlayerUI.makeString("Playlist is empty. Nothing to remove.", Middle) << endl;
@@ -682,6 +681,8 @@ int main() {
                         cout << endl << endl;
                         goto playlistSelected;
                     } else {
+                        clearScreen();
+                        cout << endl << endl;
                         goto removeFromPlaylist;
                     }
                 }
@@ -689,9 +690,8 @@ int main() {
                 if (stoi(songsIndex) >= 1 and stoi(songsIndex) <= allPlaylist[stoi(allPlaylistIndex) - 1]->songs.size()) {
                     allPlaylist[stoi(allPlaylistIndex) - 1]->songs = musicQueue.removeMusic(allPlaylist[stoi(allPlaylistIndex) - 1]->songs, allPlaylist[stoi(allPlaylistIndex) - 1]->songs[stoi(songsIndex) - 1]);
                     clearScreen();
-                    cout << endl << endl;
+                    cout << endl;
                     cout << "  [Success] The selected song has been removed from the playlist" << endl << endl;
-                    printConfirm("Edit Playlist Menu");
                     goto removeFromPlaylist;
                 } else if (songsIndex == "0") {
                     exit(EXIT_SUCCESS);
