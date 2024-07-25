@@ -13,7 +13,7 @@ g++ .\src\main.cpp .\src\music_ui.cpp .\src\queue.cpp .\src\align_helper.hpp -o 
 ```sh
 .\music-player.exe
 ```
-#### About
+## About
 This program is created as a final project for the Data Structures class by
 **Group 7:**
 Tandang Pangestu - 23.61.0261
